@@ -1,7 +1,6 @@
 pub mod fib;
 use fib::fibonacci;
 
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let n = args
