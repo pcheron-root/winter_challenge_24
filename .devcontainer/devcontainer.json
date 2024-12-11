@@ -6,8 +6,7 @@
 	"image": "mcr.microsoft.com/devcontainers/rust:1-1-bullseye",
 	"features": {
 		"ghcr.io/devcontainers/features/rust:1": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {},
-		"ghcr.io/devcontainers/features/java:1": {} // Used for Prusti
+		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 	"customizations": {
 		"vscode": {
@@ -40,8 +39,7 @@
 				"ZhangYue.rust-mod-generator",
 				"usernamehw.errorlens",
 				"seatonjiang.gitmoji-vscode",
-				"github.vscode-github-actions",
-				"viper-admin.prusti-assistant"
+				"github.vscode-github-actions"
 			]
 		},
 		"codespaces": {
