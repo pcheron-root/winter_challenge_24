@@ -64,7 +64,7 @@
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	,
-	"postCreateCommand": "rustup component add clippy rustfmt && (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash) && cargo binstall cargo-mutants -y && cargo install cargo-fuzz"
+	"postCreateCommand": "rustup component add clippy rustfmt && (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash) && cargo binstall cargo-mutants -y && cargo install cargo-fuzz && cargo install bundler"
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
