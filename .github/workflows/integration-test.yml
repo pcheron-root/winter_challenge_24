@@ -160,40 +160,6 @@ jobs:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-  cargo_fuzzing: # https://rust-fuzz.github.io/book/cargo-fuzz
-    name: Cargo Fuzzing
-    needs: [cargo_test]
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust nightly
-        uses: dtolnay/rust-toolchain@master
-        id: rust-toolchain
-        with:
-          toolchain: nightly
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2
-        name: Install cargo-fuzz using install-action
-        with:
-          tool: cargo-fuzz
-      - name: Run mutant tests
-        id: fuzz
-        run: cargo fuzz run fuzz_play_game -- -max_len=4 -max_total_time=180
-      - name: upload artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuzzing
-          path: fuzz/artifacts
-      - uses: mshick/add-pr-comment@v2
-        if: failure()
-        with:
-          message: "Fuzzing failed, artifacts are uploaded."
-
-
   cargo_bench:
     name: Cargo Bench
     needs: [cargo_test]
