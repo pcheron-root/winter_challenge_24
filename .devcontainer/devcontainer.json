@@ -11,6 +11,27 @@
 	},
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"workbench.colorTheme": "Default Dark+",
+				"rust-analyzer.check.overrideCommand": [
+					"cargo",
+					"check",
+					"--workspace",
+					"--message-format=json",
+					"--manifest-path",
+					"/workspaces/CodinGame_Rust_template/Cargo.toml",
+					"--all-targets"
+				],
+				"rust-analyzer.cargo.buildScripts.overrideCommand": [
+					"cargo",
+					"check",
+					"--workspace",
+					"--message-format=json",
+					"--manifest-path",
+					"/workspaces/CodinGame_Rust_template/Cargo.toml",
+					"--all-targets"
+				]
+			},
 			"extensions": [
 				"rust-lang.rust-analyzer",
 				"serayuzgur.crates",
@@ -24,10 +45,11 @@
 			]
 		},
 		"codespaces": {
-			"openFiles": ["README.md"]
+			"openFiles": [
+				"README.md"
+			]
 		}
 	}
-
 	// Use 'mounts' to make the cargo cache persistent in a Docker Volume.
 	// "mounts": [
 	// 	{
@@ -36,19 +58,15 @@
 	// 		"type": "volume"
 	// 	}
 	// ]
-
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
-	,"postCreateCommand": "rustup component add clippy rustfmt && (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash) && cargo binstall cargo-mutants -y && cargo install cargo-fuzz"
-
+	,
+	"postCreateCommand": "rustup component add clippy rustfmt && (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash) && cargo binstall cargo-mutants -y && cargo install cargo-fuzz"
 	// Configure tool-specific properties.
 	// "customizations": {},
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
