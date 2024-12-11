@@ -29,7 +29,8 @@
 					"--manifest-path",
 					"/workspaces/CodinGame_Rust_template/Cargo.toml",
 					"--all-targets"
-				]
+				],
+				"editor.formatOnSave": true
 			},
 			"extensions": [
 				"rust-lang.rust-analyzer",
