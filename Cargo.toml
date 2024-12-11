@@ -1,5 +1,5 @@
 [package]
-name = "template_exercisme"
+name = "codingame_rust_template"
 description = "CodinGame Rust template that contains automatic benchmarking, automatic mutation testing, automatic fuzz testing. "
 repository = "https://github.com/MathieuSoysal/CodinGame_Rust_template"
 readme = "README.md"
@@ -7,7 +7,6 @@ version = "0.1.0"
 authors = ["MathieuSoysal <hsoysal@student.42.fr>"]
 license = "Apache-2.0"
 edition = "2021"
-
 
 [dependencies]
 chrono = "0.4.26"
