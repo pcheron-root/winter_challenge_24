@@ -1,10 +1,113 @@
-pub mod arena;
-pub mod player;
-
+pub mod arena {
+    pub struct Arena {
+        pub map: Vec<u32>,
+        pub dim_x: usize,
+        pub dim_y: usize,
+    }
+    impl Arena {
+        pub fn new(x: usize, y: usize) -> Self {
+            Arena {
+                map: vec![0; x * y],
+                dim_x: x,
+                dim_y: y,
+            }
+        }
+        pub fn is_mine(&self, x: usize, y: usize) -> bool {
+            if self.map[y * self.dim_x + x] & 64 == 64 {
+                return true;
+            }
+            false
+        }
+        pub fn is_enemy(&self, x: usize, y: usize) -> bool {
+            if self.map[y * self.dim_x + x] & 32 == 32 {
+                return true;
+            }
+            false
+        }
+        pub fn is_my_cel_next_to(&self, x: usize, y: usize) -> (bool, usize, usize) {
+            if x > 0 && self.is_mine(x - 1, y) {
+                return (true, x - 1, y);
+            } else if self.is_mine(x + 1, y) {
+                return (true, x + 1, y);
+            } else if self.is_mine(x, y + 1) {
+                return (true, x, y + 1);
+            } else if y > 0 && self.is_mine(x, y - 1) {
+                return (true, x, y - 1);
+            }
+            (false, 0, 0)
+        }
+        pub fn find_where_grow(&self) -> (bool, usize, usize) {
+            for y in 0..self.dim_y {
+                for x in 0..self.dim_x {
+                    if self.is_mine(x, y) == false && self.is_my_cel_next_to(x, y) {
+                        return (true, x, y);
+                    }
+                }
+            }
+            (false, 0, 0)
+        }
+        pub fn can_be_won_over(&self, x: usize, y: usize) -> bool {
+            let mut elem = self.map[y * self.dim_x + x];
+            elem = elem << 27;
+            elem = elem >> 27;
+            if elem == 0 || (7 <= elem && elem <= 11) {
+                return true;
+            }
+            false
+        }
+        pub fn is_an_organ(&self, x: usize, y: usize) -> bool {
+            let mut elem = self.map[y * self.dim_x + x];
+            elem = elem << 27;
+            elem = elem >> 27;
+            if 2 <= elem && elem <= 6 {
+                return true;
+            }
+            false
+        }
+        pub fn get_bigger_id(&self) -> u32 {
+            let mut max = 0;
+            for y in 0..self.dim_y {
+                for x in 0..self.dim_x {
+                    if self.is_an_organ(x, y) {
+                        let mut elem = self.map[y * self.dim_x + x];
+                        elem = elem >> 16;
+                        if max < elem {
+                            max = elem;
+                        }
+                    }
+                }
+            }
+            max
+        }
+    }
+}
+pub mod player {
+    pub struct Player {
+        pub a: usize,
+        pub b: usize,
+        pub c: usize,
+        pub d: usize,
+    }
+    impl Player {
+        pub fn new() -> Self {
+            Player {
+                a: 0,
+                b: 0,
+                c: 0,
+                d: 0,
+            }
+        }
+        pub fn update_values(&mut self, a: usize, b: usize, c: usize, d: usize) {
+            self.a = a;
+            self.b = b;
+            self.c = c;
+            self.d = d;
+        }
+    }
+}
 use arena::Arena;
 use player::Player;
 use std::io;
-
 pub const WALL: u32 = 1;
 pub const ROOT: u32 = 2;
 pub const BASIC: u32 = 3;
@@ -16,26 +119,21 @@ pub const B: u32 = 8;
 pub const C: u32 = 9;
 pub const D: u32 = 10;
 pub const UNKNOWN: u32 = 11;
-
 macro_rules! parse_input {
-    ($x:expr, $t:ident) => {
+    ( $ x : expr , $ t : ident ) => {
         $x.trim().parse::<$t>().unwrap()
     };
 }
-
 fn main() {
     let mut input_line: String = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
     let inputs = input_line.split(" ").collect::<Vec<_>>();
     let cols = parse_input!(inputs[0], usize);
     let rows = parse_input!(inputs[1], usize);
-
     let mut arena = Arena::new(rows, cols);
     let mut guapo = Player::new();
     let mut opponent = Player::new();
-
     loop {
-        // Parsing
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let entity_count = parse_input!(input_line, i32);
@@ -43,14 +141,9 @@ fn main() {
             let mut input_line = String::new();
             io::stdin().read_line(&mut input_line).unwrap();
             let inputs = input_line.split(" ").collect::<Vec<_>>();
-
-            // elem coordinate
             let x = parse_input!(inputs[0], usize);
             let y = parse_input!(inputs[1], usize);
-
             let mut new_elem: u32;
-
-            // WALL, ROOT, BASIC, TENTACLE, HARVESTER, SPORER, A, B, C, D -> 10 / 6 organs 4 proteins
             let _type = inputs[2].trim().to_string();
             match _type.as_str() {
                 "WALL" => new_elem = WALL,
@@ -65,8 +158,6 @@ fn main() {
                 "D" => new_elem = D,
                 _ => new_elem = UNKNOWN,
             }
-
-            // 1 if your organ, 0 if enemy organ, -1 if neither -> 3
             let owner = parse_input!(inputs[3], i32);
             let new_owner: u32;
             if owner == 1 {
@@ -79,30 +170,17 @@ fn main() {
             if owner >= 0 {
                 new_elem += 32 * (new_owner + 1);
             }
-
-            // id of this entity if it's an organ, 0 otherwise ->
             let mut organ_id = parse_input!(inputs[4], u32);
             if organ_id > 0 {
                 organ_id = organ_id << 16;
                 new_elem += organ_id;
             }
-
             let index = cols * y + x;
             arena.map[index as usize] = new_elem;
-
-            // N,E,S,W or X if not an organ -> orientation
             let _organ_dir = inputs[5].trim().to_string();
-
-            // parse latter
             let _organ_parent_id = parse_input!(inputs[6], u32);
             let _organ_root_id = parse_input!(inputs[7], u32);
-
-            // elem type 10 -> 5 bits -> 16 8 4 2 0
-            // owner -> 1 bit -> 32
-            // id -> parse later
         }
-
-        // my protein stock
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let inputs = input_line.split(" ").collect::<Vec<_>>();
@@ -111,8 +189,6 @@ fn main() {
         let my_c = parse_input!(inputs[2], usize);
         let my_d = parse_input!(inputs[3], usize);
         guapo.update_values(my_a, my_b, my_c, my_d);
-
-        // opponent protein stock
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let inputs = input_line.split(" ").collect::<Vec<_>>();
@@ -121,15 +197,11 @@ fn main() {
         let opp_c = parse_input!(inputs[2], usize);
         let opp_d = parse_input!(inputs[3], usize);
         opponent.update_values(opp_a, opp_b, opp_c, opp_d);
-
-        // number of organisms
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
-        let required_actions_count = parse_input!(input_line, i32); // your number of organisms, output an action for each one in any order
-
+        let required_actions_count = parse_input!(input_line, i32);
         for _ in 0..required_actions_count as usize {
             let mut output = String::new();
-
             let (to_build, x_new, y_new) = arena.find_where_grow();
             if to_build {
                 output.push_str("GROW ");
@@ -147,4 +219,3 @@ fn main() {
         }
     }
 }
-// To debug: eprintln!("Debug message...");

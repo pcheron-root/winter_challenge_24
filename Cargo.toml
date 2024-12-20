@@ -1,10 +1,10 @@
 [package]
-name = "codingame_rust_template"
-description = "CodinGame Rust template that contains automatic benchmarking, automatic mutation testing, automatic fuzz testing. "
-repository = "https://github.com/MathieuSoysal/CodinGame_Rust_template"
+name = "winter"
+description = ""
+repository = "https://github.com/pcheron-root/winter_challenge_24"
 readme = "README.md"
 version = "0.1.0"
-authors = ["MathieuSoysal <hsoysal@student.42.fr>"]
+authors = ["pcheron-root <pcheron@student.42.fr>"]
 license = "Apache-2.0"
 edition = "2021"
 
