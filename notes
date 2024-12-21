@@ -1,0 +1,23 @@
+
+penser a ajouter un bit pour dire que la prot est en train de se faire grail
+
+3 strategies :
+
+Defense :
+utiliser cette strat en cas de proximite entre mon organisme et un organisme adverse
+-> une fonction qui detechte la proximite en inondant la map,
+si pas d'enemie jusqu'a plus de 3 cases, on choisi un autre algo
+chercher a attaquer l'adversaire
+
+Conquete :
+La map n'est pas occupee,
+on cherche a envoyer un clone le plus loin possible
+
+
+Developpement :
+Maximiser les ressources,
+programme par defaut
+1) -> rush les proeines
+2) -> on s'expend aleatoirement
+
+

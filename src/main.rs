@@ -129,16 +129,14 @@ fn main() {
 
         for _ in 0..required_actions_count as usize {
             let mut output = String::new();
-
-            let (to_build, x_new, y_new) = arena.find_where_grow();
-            if to_build {
+            // let (to_build, x_new, y_new, magic) = arena.find_where_grow();
+            if true {
                 output.push_str("GROW ");
-                let id = arena.get_bigger_id() + 1;
-                output.push_str(&id.to_string());
+                output.push_str("1");
                 output.push_str(" ");
-                output.push_str(&x_new.to_string());
+                // output.push_str(&x_new.to_string());
                 output.push_str(" ");
-                output.push_str(&y_new.to_string());
+                // output.push_str(&y_new.to_string());
                 output.push_str(" BASIC");
                 println!("{}", output);
             } else {
@@ -147,4 +145,3 @@ fn main() {
         }
     }
 }
-// To debug: eprintln!("Debug message...");

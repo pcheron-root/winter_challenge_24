@@ -36,15 +36,18 @@ pub mod arena {
             }
             (false, 0, 0)
         }
-        pub fn find_where_grow(&self) -> (bool, usize, usize) {
+        pub fn find_where_grow(&self) -> (bool, usize, usize, u32) {
             for y in 0..self.dim_y {
                 for x in 0..self.dim_x {
-                    if self.is_mine(x, y) == false && self.is_my_cel_next_to(x, y) {
-                        return (true, x, y);
+                    if self.is_mine(x, y) == false {
+                        let (is_my_cel, next_x, next_y) = self.is_my_cel_next_to(x, y);
+                        if is_my_cel {
+                            return (true, x, y, 0);
+                        }
                     }
                 }
             }
-            (false, 0, 0)
+            (false, 0, 0, 0)
         }
         pub fn can_be_won_over(&self, x: usize, y: usize) -> bool {
             let mut elem = self.map[y * self.dim_x + x];
@@ -63,21 +66,6 @@ pub mod arena {
                 return true;
             }
             false
-        }
-        pub fn get_bigger_id(&self) -> u32 {
-            let mut max = 0;
-            for y in 0..self.dim_y {
-                for x in 0..self.dim_x {
-                    if self.is_an_organ(x, y) {
-                        let mut elem = self.map[y * self.dim_x + x];
-                        elem = elem >> 16;
-                        if max < elem {
-                            max = elem;
-                        }
-                    }
-                }
-            }
-            max
         }
     }
 }
@@ -119,11 +107,7 @@ pub const B: u32 = 8;
 pub const C: u32 = 9;
 pub const D: u32 = 10;
 pub const UNKNOWN: u32 = 11;
-macro_rules! parse_input {
-    ( $ x : expr , $ t : ident ) => {
-        $x.trim().parse::<$t>().unwrap()
-    };
-}
+macro_rules ! parse_input { ( $ x : expr , $ t : ident ) => { $ x . trim ( ) . parse ::<$ t > ( ) . unwrap ( ) } ; }
 fn main() {
     let mut input_line: String = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
@@ -202,11 +186,10 @@ fn main() {
         let required_actions_count = parse_input!(input_line, i32);
         for _ in 0..required_actions_count as usize {
             let mut output = String::new();
-            let (to_build, x_new, y_new) = arena.find_where_grow();
+            let (to_build, x_new, y_new, magic) = arena.find_where_grow();
             if to_build {
                 output.push_str("GROW ");
-                let id = arena.get_bigger_id() + 1;
-                output.push_str(&id.to_string());
+                output.push_str("1");
                 output.push_str(" ");
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
@@ -219,3 +202,4 @@ fn main() {
         }
     }
 }
+
