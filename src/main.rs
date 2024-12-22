@@ -1,7 +1,7 @@
 pub mod arena;
 pub mod player;
 
-use arena::Arena;
+use arena::{print_map, Arena};
 use player::Player;
 use std::io;
 
@@ -17,6 +17,11 @@ pub const C: u32 = 9;
 pub const D: u32 = 10;
 pub const UNKNOWN: u32 = 11;
 
+pub const NORTH: u32 = 0;
+pub const SOUTH: u32 = 128;
+pub const WEST: u32 = 256;
+pub const EAST: u32 = 256 + 128;
+
 macro_rules! parse_input {
     ($x:expr, $t:ident) => {
         $x.trim().parse::<$t>().unwrap()
@@ -29,13 +34,13 @@ fn main() {
     let inputs = input_line.split(" ").collect::<Vec<_>>();
     let cols = parse_input!(inputs[0], usize);
     let rows = parse_input!(inputs[1], usize);
+    // eprintln!("cols:{} rows:{}", cols, rows);
 
     let mut arena = Arena::new(rows, cols);
     let mut guapo = Player::new();
     let mut opponent = Player::new();
 
     loop {
-        // Parsing
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let entity_count = parse_input!(input_line, i32);
@@ -44,13 +49,11 @@ fn main() {
             io::stdin().read_line(&mut input_line).unwrap();
             let inputs = input_line.split(" ").collect::<Vec<_>>();
 
-            // elem coordinate
             let x = parse_input!(inputs[0], usize);
             let y = parse_input!(inputs[1], usize);
 
             let mut new_elem: u32;
 
-            // WALL, ROOT, BASIC, TENTACLE, HARVESTER, SPORER, A, B, C, D -> 10 / 6 organs 4 proteins
             let _type = inputs[2].trim().to_string();
             match _type.as_str() {
                 "WALL" => new_elem = WALL,
@@ -87,19 +90,21 @@ fn main() {
                 new_elem += organ_id;
             }
 
+            let organ_dir = inputs[5].trim().to_string();
+            if organ_dir == "S" {
+                new_elem += 128;
+            } else if organ_dir == "W" {
+                new_elem += 256;
+            } else if organ_dir == "E" {
+                new_elem += 256 + 128;
+            }
+
             let index = cols * y + x;
             arena.map[index as usize] = new_elem;
-
-            // N,E,S,W or X if not an organ -> orientation
-            let _organ_dir = inputs[5].trim().to_string();
 
             // parse latter
             let _organ_parent_id = parse_input!(inputs[6], u32);
             let _organ_root_id = parse_input!(inputs[7], u32);
-
-            // elem type 10 -> 5 bits -> 16 8 4 2 0
-            // owner -> 1 bit -> 32
-            // id -> parse later
         }
 
         // my protein stock
@@ -129,15 +134,16 @@ fn main() {
 
         for _ in 0..required_actions_count as usize {
             let mut output = String::new();
-            // let (to_build, x_new, y_new, magic) = arena.find_where_grow();
+            let (x_new, y_new, order, direction) = arena.next_move();
             if true {
                 output.push_str("GROW ");
                 output.push_str("1");
                 output.push_str(" ");
-                // output.push_str(&x_new.to_string());
+                output.push_str(&x_new.to_string());
                 output.push_str(" ");
-                // output.push_str(&y_new.to_string());
-                output.push_str(" BASIC");
+                output.push_str(&y_new.to_string());
+                output.push_str(&order);
+                output.push_str(&direction);
                 println!("{}", output);
             } else {
                 println!("WAIT");
