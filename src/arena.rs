@@ -16,19 +16,73 @@ impl Arena {
         }
     }
 
-    pub fn is_enemy_near(&self) -> (bool, usize, usize, String, String) {
+    pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String) {
+        let mut map = vec![4; self.nb_col * self.nb_lin];
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if is_wall(self.map[y * self.nb_col + x]) {
+                    map[y * self.nb_col + x] = 64;
+                }
+                if is_from_organ(self.map[y * self.nb_col + x], id) {
+                    map[y * self.nb_col + x] = 0;
+                }
+            }
+        }
+        for i in 0..2 {
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == i {
+                        eprintln!("je trouve un {}", i);
+                        if map[y * self.nb_col + x + 1] > i + 1
+                            && map[y * self.nb_col + x + 1] != 64
+                        {
+                            map[y * self.nb_col + x + 1] = i + 1;
+                            if i == 1 && is_oppo(self.map[y * self.nb_col + x + 1]) {
+                                return (true, x, y, " TENTACLE".to_string(), " E".to_string());
+                            }
+                        }
+                        if map[y * self.nb_col + x - 1] > i + 1
+                            && map[y * self.nb_col + x - 1] != 64
+                        {
+                            map[y * self.nb_col + x - 1] = i + 1;
+                            if i == 1 && is_oppo(self.map[y * self.nb_col + x - 1]) {
+                                return (true, x, y, " TENTACLE".to_string(), " W".to_string());
+                            }
+                        }
+                        if map[(y + 1) * self.nb_col + x] > i + 1
+                            && map[(y + 1) * self.nb_col + x] != 64
+                        {
+                            map[(y + 1) * self.nb_col + x] = i + 1;
+                            if i == 1 && is_oppo(self.map[(y + 1) * self.nb_col + x]) {
+                                return (true, x, y, " TENTACLE".to_string(), " S".to_string());
+                            }
+                        }
+                        if map[(y - 1) * self.nb_col + x] > i + 1
+                            && map[(y - 1) * self.nb_col + x] != 64
+                        {
+                            map[(y - 1) * self.nb_col + x] = i + 1;
+                            if i == 1 && is_oppo(self.map[(y - 1) * self.nb_col + x]) {
+                                return (true, x, y, " TENTACLE".to_string(), " N".to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return (false, 0, 0, "".to_string(), "".to_string());
     }
 
-    pub fn next_move(&self) -> (usize, usize, String, String) {
-        let (is_near, x, y, order, direction) = self.is_enemy_near();
+    pub fn next_move(&self, id: u32) -> (usize, usize, String, String) {
+        print_root(self.map.clone(), self.nb_col, self.nb_lin);
+        let (is_near, x, y, order, direction) = self.is_enemy_near(id);
         if is_near {
+            eprint!("un enemy est proche");
             return (x, y, order, direction);
         }
-        return self.looking_for_prot();
+        return self.looking_for_prot(id);
     }
 
-    pub fn looking_for_prot(&self) -> (usize, usize, String, String) {
+    pub fn looking_for_prot(&self, id: u32) -> (usize, usize, String, String) {
         let mut map = vec![4; self.nb_col * self.nb_lin];
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
@@ -40,7 +94,7 @@ impl Arena {
                 }
             }
         }
-        for i in 0..4 {
+        for i in 0..7 {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == i {
@@ -152,6 +206,10 @@ pub fn is_wall(mut x: u32) -> bool {
     false
 }
 
+pub fn is_from_organ(x: u32, id: u32) -> bool {
+    id == (x >> 16)
+}
+
 pub fn is_protein(mut x: u32) -> bool {
     x = x << 27;
     x = x >> 27;
@@ -162,7 +220,31 @@ pub fn is_protein(mut x: u32) -> bool {
 }
 
 pub fn print_map(map: Vec<u32>, slice: usize, nb_slice: usize) {
-    eprintln!("j'affiche une map\n");
+    eprintln!("print map\n");
+    for i in 0..nb_slice {
+        eprintln!("{:?}\n", &map[(i * slice)..(slice * (1 + i))]);
+    }
+}
+pub fn print_enemies(mut map: Vec<u32>, slice: usize, nb_slice: usize) {
+    eprintln!("print enemies\n");
+    for j in 0..(slice * nb_slice) {
+        if is_oppo(map[j]) {
+            map[j] = 32;
+        }
+        if is_mine(map[j]) {
+            map[j] = 64;
+        }
+    }
+    for i in 0..nb_slice {
+        eprintln!("{:?}\n", &map[(i * slice)..(slice * (1 + i))]);
+    }
+}
+
+pub fn print_root(mut map: Vec<u32>, slice: usize, nb_slice: usize) {
+    eprintln!("print enemies\n");
+    for j in 0..(slice * nb_slice) {
+        map[j] = map[j] >> 16;
+    }
     for i in 0..nb_slice {
         eprintln!("{:?}\n", &map[(i * slice)..(slice * (1 + i))]);
     }

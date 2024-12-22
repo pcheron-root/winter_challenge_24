@@ -34,7 +34,6 @@ fn main() {
     let inputs = input_line.split(" ").collect::<Vec<_>>();
     let cols = parse_input!(inputs[0], usize);
     let rows = parse_input!(inputs[1], usize);
-    // eprintln!("cols:{} rows:{}", cols, rows);
 
     let mut arena = Arena::new(rows, cols);
     let mut guapo = Player::new();
@@ -84,11 +83,11 @@ fn main() {
             }
 
             // id of this entity if it's an organ, 0 otherwise ->
-            let mut organ_id = parse_input!(inputs[4], u32);
-            if organ_id > 0 {
-                organ_id = organ_id << 16;
-                new_elem += organ_id;
-            }
+            let mut _organ_id = parse_input!(inputs[4], u32);
+            // if organ_id > 0 {
+            //     organ_id = organ_id << 16;
+            //     new_elem += organ_id;
+            // }
 
             let organ_dir = inputs[5].trim().to_string();
             if organ_dir == "S" {
@@ -99,12 +98,15 @@ fn main() {
                 new_elem += 256 + 128;
             }
 
+            let _organ_parent_id = parse_input!(inputs[6], u32);
+            let mut _organ_root_id = parse_input!(inputs[7], u32);
+            if _organ_root_id > 0 {
+                _organ_root_id = _organ_root_id << 16;
+                new_elem += _organ_root_id;
+            }
+
             let index = cols * y + x;
             arena.map[index as usize] = new_elem;
-
-            // parse latter
-            let _organ_parent_id = parse_input!(inputs[6], u32);
-            let _organ_root_id = parse_input!(inputs[7], u32);
         }
 
         // my protein stock
@@ -132,12 +134,12 @@ fn main() {
         io::stdin().read_line(&mut input_line).unwrap();
         let required_actions_count = parse_input!(input_line, i32); // your number of organisms, output an action for each one in any order
 
-        for _ in 0..required_actions_count as usize {
+        for id in 0..required_actions_count as u32 {
             let mut output = String::new();
-            let (x_new, y_new, order, direction) = arena.next_move();
+            let (x_new, y_new, order, direction) = arena.next_move(id * 2 + 1);
             if true {
                 output.push_str("GROW ");
-                output.push_str("1");
+                output.push_str(&(id * 2 + 1).to_string());
                 output.push_str(" ");
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
