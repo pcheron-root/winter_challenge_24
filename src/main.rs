@@ -1,3 +1,6 @@
+// pb a gerer
+// j'utilise les mauvais id root
+
 pub mod arena;
 pub mod player;
 
@@ -83,11 +86,9 @@ fn main() {
             }
 
             // id of this entity if it's an organ, 0 otherwise ->
-            let mut _organ_id = parse_input!(inputs[4], u32);
-            // if organ_id > 0 {
-            //     organ_id = organ_id << 16;
-            //     new_elem += organ_id;
-            // }
+            let mut organ_id = parse_input!(inputs[4], u32);
+            organ_id = organ_id << 24;
+            new_elem += organ_id;
 
             let organ_dir = inputs[5].trim().to_string();
             if organ_dir == "S" {
@@ -134,22 +135,30 @@ fn main() {
         io::stdin().read_line(&mut input_line).unwrap();
         let required_actions_count = parse_input!(input_line, i32); // your number of organisms, output an action for each one in any order
 
-        for id in 0..required_actions_count as u32 {
+        for num_id in 0..required_actions_count as u32 {
             let mut output = String::new();
-            let (x_new, y_new, order, direction) = arena.next_move(id * 2 + 1);
-            if true {
+            let (id, x_new, y_new, order, direction) = arena.next_move(num_id, &guapo, &opponent);
+            if order == "SPORE " {
+                output.push_str("SPORE ");
+                output.push_str(&direction);
+                output.push_str(" ");
+                output.push_str(&x_new.to_string());
+                output.push_str(" ");
+                output.push_str(&y_new.to_string());
+            } else {
                 output.push_str("GROW ");
-                output.push_str(&(id * 2 + 1).to_string());
+                output.push_str(&(id).to_string());
                 output.push_str(" ");
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
                 output.push_str(&order);
                 output.push_str(&direction);
-                println!("{}", output);
-            } else {
-                println!("WAIT");
             }
+            println!("{}", output);
+            // } else {
+            //     println!("WAIT");
+            // }
         }
     }
 }

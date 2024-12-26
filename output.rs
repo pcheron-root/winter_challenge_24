@@ -1,4 +1,5 @@
 pub mod arena {
+    use core::num;
     pub struct Arena {
         pub map: Vec<u32>,
         pub nb_col: usize,
@@ -28,8 +29,7 @@ pub mod arena {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
                         if map[y * self.nb_col + x] == i {
-                            eprintln!("je trouve un {}", i);
-                            if map[y * self.nb_col + x + 1] > i + 1 &&
+                            if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
                                 map[y * self.nb_col + x + 1] != 64
                             {
                                 map[y * self.nb_col + x + 1] = i + 1;
@@ -37,7 +37,7 @@ pub mod arena {
                                     return (true, x, y, " TENTACLE".to_string(), " E".to_string());
                                 }
                             }
-                            if map[y * self.nb_col + x - 1] > i + 1 &&
+                            if x >= 1 && map[y * self.nb_col + x - 1] > i + 1 &&
                                 map[y * self.nb_col + x - 1] != 64
                             {
                                 map[y * self.nb_col + x - 1] = i + 1;
@@ -45,7 +45,7 @@ pub mod arena {
                                     return (true, x, y, " TENTACLE".to_string(), " W".to_string());
                                 }
                             }
-                            if map[(y + 1) * self.nb_col + x] > i + 1 &&
+                            if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
                                 map[(y + 1) * self.nb_col + x] != 64
                             {
                                 map[(y + 1) * self.nb_col + x] = i + 1;
@@ -53,7 +53,7 @@ pub mod arena {
                                     return (true, x, y, " TENTACLE".to_string(), " S".to_string());
                                 }
                             }
-                            if map[(y - 1) * self.nb_col + x] > i + 1 &&
+                            if y >= 1 && map[(y - 1) * self.nb_col + x] > i + 1 &&
                                 map[(y - 1) * self.nb_col + x] != 64
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
@@ -67,16 +67,115 @@ pub mod arena {
             }
             return (false, 0, 0, "".to_string(), "".to_string());
         }
-        pub fn next_move(&self, id: u32) -> (usize, usize, String, String) {
-            print_root(self.map.clone(), self.nb_col, self.nb_lin);
+        pub fn is_expandable(&self, id: u32) -> (bool, usize, usize, String, String) {
+            let mut map = vec![4; self.nb_col * self.nb_lin];
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if is_wall(self.map[y * self.nb_col + x]) {
+                        map[y * self.nb_col + x] = 64;
+                    }
+                    if is_from_organ(self.map[y * self.nb_col + x], id) {
+                        map[y * self.nb_col + x] = 0;
+                    }
+                }
+            }
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 0 {
+                        if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > 1 &&
+                            map[y * self.nb_col + x + 1] < 8
+                        {
+                            map[y * self.nb_col + x + 1] = 1;
+                        }
+                        if x > 0 && map[y * self.nb_col + x - 1] > 1 &&
+                            map[y * self.nb_col + x - 1] < 8
+                        {
+                            map[y * self.nb_col + x - 1] = 1;
+                        }
+                        if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > 1 &&
+                            map[y * self.nb_col + x] < 8
+                        {
+                            map[(y + 1) * self.nb_col + x] = 1;
+                        }
+                        if y > 0 && map[(y - 1) * self.nb_col + x] > 1 &&
+                            map[(y - 1) * self.nb_col + x] < 8
+                        {
+                            map[(y - 1) * self.nb_col + x] = 1;
+                        }
+                    }
+                }
+            }
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 1 && x + 12 < self.nb_col {
+                        for i in 1..13 {
+                            if !is_crossable(self.map[y * self.nb_col + x + i]) {
+                                break;
+                            }
+                            if i == 12 && !is_protein(self.map[y * self.nb_col + x + i]) {
+                                if !self.is_organism_next_to(x + i, y) {
+                                    return (true, x, y, " SPORER".to_string(), " E".to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            (false, 0, 0, "".to_string(), "".to_string())
+        }
+        pub fn is_charged(&self, id: u32) -> (bool, usize, usize, String, String) {
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if is_sporer(self.map[y * self.nb_col + x]) &&
+                        is_from_organ(self.map[y * self.nb_col + x], id)
+                    {
+                        if x + 12 < self.nb_col - 1 &&
+                            !is_mine(self.map[y * self.nb_col + x + 12])
+                        {
+                            let id_sporer = self.map[y * self.nb_col + x] >> 24;
+                            return (true, x + 12, y, "SPORE ".to_string(), id_sporer.to_string());
+                        }
+                    }
+                }
+            }
+            (false, 0, 0, "".to_string(), "".to_string())
+        }
+        pub fn find_right_id(&self, mut num_id: u32) -> u32 {
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if is_root(self.map[y * self.nb_col + x]) &&
+                        is_mine(self.map[y * self.nb_col + x])
+                    {
+                        if num_id > 0 {
+                            num_id -= 1;
+                        } else {
+                            return self.map[y * self.nb_col + x] >> 24;
+                        }
+                    }
+                }
+            }
+            0
+        }
+        pub fn next_move(&self, num_id: u32) -> (u32, usize, usize, String, String) {
+            let id = self.find_right_id(num_id);
             let (is_near, x, y, order, direction) = self.is_enemy_near(id);
             if is_near {
-                eprint!("un enemy est proche");
-                return (x, y, order, direction);
+                eprintln!("je me defend");
+                return (id, x, y, order, direction);
+            }
+            let (is_charged, x, y, order, direction) = self.is_charged(id);
+            if is_charged {
+                eprintln!("je lance un spore");
+                return (id, x, y, order, direction);
+            }
+            let (is_expandable, x, y, order, direction) = self.is_expandable(id);
+            if is_expandable {
+                eprintln!("je lance un sporer");
+                return (id, x, y, order, direction);
             }
             return self.looking_for_prot(id);
         }
-        pub fn looking_for_prot(&self, id: u32) -> (usize, usize, String, String) {
+        pub fn looking_for_prot(&self, id: u32) -> (u32, usize, usize, String, String) {
             let mut map = vec![4; self.nb_col * self.nb_lin];
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
@@ -92,49 +191,48 @@ pub mod arena {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
                         if map[y * self.nb_col + x] == i {
-                            if map[y * self.nb_col + x + 1] > i + 1 &&
+                            if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
                                 map[y * self.nb_col + x + 1] != 64
                             {
                                 map[y * self.nb_col + x + 1] = i + 1;
                                 if i == 1 && is_protein(self.map[y * self.nb_col + x + 1]) &&
                                     !self.is_ate(x + 1, y)
                                 {
-                                    return (x, y, " HARVESTER".to_string(), " E".to_string());
+                                    return (id, x, y, " HARVESTER".to_string(), " E".to_string());
                                 }
                             }
-                            if map[y * self.nb_col + x - 1] > i + 1 &&
+                            if x > 0 && map[y * self.nb_col + x - 1] > i + 1 &&
                                 map[y * self.nb_col + x - 1] != 64
                             {
                                 map[y * self.nb_col + x - 1] = i + 1;
                                 if i == 1 && is_protein(self.map[y * self.nb_col + x - 1]) &&
                                     !self.is_ate(x - 1, y)
                                 {
-                                    return (x, y, " HARVESTER".to_string(), " W".to_string());
+                                    return (id, x, y, " HARVESTER".to_string(), " W".to_string());
                                 }
                             }
-                            if map[(y + 1) * self.nb_col + x] > i + 1 &&
+                            if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
                                 map[(y + 1) * self.nb_col + x] != 64
                             {
                                 map[(y + 1) * self.nb_col + x] = i + 1;
                                 if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
                                     !self.is_ate(x, y + 1)
                                 {
-                                    return (x, y, " HARVESTER".to_string(), " S".to_string());
+                                    return (id, x, y, " HARVESTER".to_string(), " S".to_string());
                                 }
                             }
-                            if map[(y - 1) * self.nb_col + x] > i + 1 &&
+                            if y > 0 && map[(y - 1) * self.nb_col + x] > i + 1 &&
                                 map[(y - 1) * self.nb_col + x] != 64
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
                                 if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
                                     !self.is_ate(x, y + 1)
                                 {
-                                    return (x, y, " HARVESTER".to_string(), " N".to_string());
+                                    return (id, x, y, " HARVESTER".to_string(), " N".to_string());
                                 }
                             }
                             if is_protein(self.map[y * self.nb_col + x]) && !self.is_ate(x, y) {
-                                eprint!("pas encore mange");
-                                return (x, y, " BASIC".to_string(), "".to_string());
+                                return (id, x, y, " BASIC".to_string(), "".to_string());
                             }
                         }
                     }
@@ -143,26 +241,88 @@ pub mod arena {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) {
-                        return (x, y, " BASIC".to_string(), "".to_string());
+                        return (id, x, y, " BASIC".to_string(), "".to_string());
                     }
                 }
             }
-            return (0, 0, " BASIC".to_string(), "".to_string());
+            return (id, 0, 0, " BASIC".to_string(), "".to_string());
+        }
+        pub fn is_organism_next_to(&self, x: usize, y: usize) -> bool {
+            let mut map = vec![6; self.nb_col * self.nb_lin];
+            for i in 0..self.nb_lin {
+                for j in 0..self.nb_col {
+                    if is_wall(self.map[i * self.nb_col + j]) {
+                        map[i * self.nb_col + j] = 8;
+                    }
+                    if is_mine(self.map[i * self.nb_col + j]) {
+                        map[i * self.nb_col + j] = 64;
+                    }
+                    if is_oppo(self.map[i * self.nb_col + j]) {
+                        map[i * self.nb_col + j] = 32;
+                    }
+                }
+            }
+            map[y * self.nb_col + x] = 0;
+            for i in 0..5 {
+                for j in 0..self.nb_lin {
+                    for k in 0..self.nb_col {
+                        if map[j * self.nb_col + k] == i {
+                            if k + 1 < self.nb_col {
+                                if map[j * self.nb_col + k + 1] > 8 {
+                                    eprintln!("desole un organ est pas loin 1");
+                                    return true;
+                                } else if map[j * self.nb_col + k + 1] < 8 {
+                                    map[j * self.nb_col + k + 1] = i + 1
+                                }
+                            }
+                            if k > 0 {
+                                if map[j * self.nb_col + k - 1] > 8 {
+                                    eprintln!("desole un organ est pas loin 2 ");
+                                    return true;
+                                } else if map[j * self.nb_col + k - 1] < 8 {
+                                    map[j * self.nb_col + k - 1] = i + 1
+                                }
+                            }
+                            if j + 1 < self.nb_lin {
+                                if map[(j + 1) * self.nb_col + k] > 8 {
+                                    eprintln!(
+                                        "desole un organ est pas loin 3 pour x {} y {}",
+                                        k,
+                                        j
+                                    );
+                                    return true;
+                                } else if map[(j + 1) * self.nb_col + k] < 8 {
+                                    map[(j + 1) * self.nb_col + k] = i + 1
+                                }
+                            }
+                            if j > 0 {
+                                if map[(j - 1) * self.nb_col + k] > 8 {
+                                    eprintln!("desole un organ est pas loin 4 ");
+                                    return true;
+                                } else if map[(j - 1) * self.nb_col + k] < 8 {
+                                    map[(j - 1) * self.nb_col + k] = i + 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            false
         }
         pub fn is_ate(&self, x: usize, y: usize) -> bool {
-            if is_mouth(self.map[(y - 1) * self.nb_col + x]) &&
+            if y > 0 && is_mouth(self.map[(y - 1) * self.nb_col + x]) &&
                 is_south(self.map[(y - 1) * self.nb_col + x])
             {
                 return true;
-            } else if is_mouth(self.map[(y + 1) * self.nb_col + x]) &&
+            } else if y + 1 < self.nb_lin && is_mouth(self.map[(y + 1) * self.nb_col + x]) &&
                        is_north(self.map[(y + 1) * self.nb_col + x])
             {
                 return true;
-            } else if is_mouth(self.map[y * self.nb_col + x - 1]) &&
+            } else if x > 0 && is_mouth(self.map[y * self.nb_col + x - 1]) &&
                        is_east(self.map[y * self.nb_col + x - 1])
             {
                 return true;
-            } else if is_mouth(self.map[y * self.nb_col + x + 1]) &&
+            } else if x + 1 < self.nb_col && is_mouth(self.map[y * self.nb_col + x + 1]) &&
                        is_west(self.map[y * self.nb_col + x + 1])
             {
                 return true;
@@ -191,7 +351,7 @@ pub mod arena {
         false
     }
     pub fn is_from_organ(x: u32, id: u32) -> bool {
-        id == (x >> 16)
+        id == (x << 8 >> 24)
     }
     pub fn is_protein(mut x: u32) -> bool {
         x = x << 27;
@@ -260,6 +420,30 @@ pub mod arena {
         }
         false
     }
+    pub fn is_free(x: u32) -> bool {
+        if (x & 32) == 32 || (x & 64) == 64 {
+            return false;
+        }
+        true
+    }
+    pub fn is_crossable(x: u32) -> bool {
+        if x == 0 || is_protein(x) {
+            return true;
+        }
+        false
+    }
+    pub fn is_sporer(x: u32) -> bool {
+        if x & 6 == 6 {
+            return true;
+        }
+        false
+    }
+    pub fn is_root(x: u32) -> bool {
+        if x << 27 >> 27 == 2 {
+            return true;
+        }
+        false
+    }
     #[test]
     fn test_is_mine() {
         let mut x: u32 = 3;
@@ -305,6 +489,8 @@ pub mod arena {
         let mut z: u32 = 4;
         z += 64;
         assert_eq!(is_protein(z), false);
+        let w: u32 = 6;
+        assert_eq!(is_protein(w), false);
     }
     #[test]
     fn test_is_north() {
@@ -370,6 +556,63 @@ pub mod arena {
         let mut z: u32 = 8;
         z += 128;
         assert_eq!(is_mouth(z), false);
+    }
+    #[test]
+    fn test_is_free() {
+        let mut x: u32 = 5;
+        x += 64;
+        assert_eq!(is_free(x), false);
+        let mut y: u32 = 5;
+        y += 128;
+        assert_eq!(is_free(y), true);
+        let mut z: u32 = 8;
+        z += 32;
+        assert_eq!(is_free(z), false);
+    }
+    #[test]
+    fn test_is_crossable() {
+        let mut x: u32 = 5;
+        x += 64;
+        assert_eq!(is_crossable(x), false);
+        let mut y: u32 = 6;
+        y += 128;
+        assert_eq!(is_crossable(y), false);
+        let z: u32 = 8;
+        assert_eq!(is_crossable(z), true);
+        let w: u32 = 0;
+        assert_eq!(is_crossable(w), true);
+        let v: u32 = 8;
+        assert_eq!(is_crossable(v), true);
+    }
+    #[test]
+    fn test_is_sporer() {
+        let mut x: u32 = 5;
+        x += 64;
+        assert_eq!(is_sporer(x), false);
+        let mut y: u32 = 6;
+        y += 128;
+        assert_eq!(is_sporer(y), true);
+        let z: u32 = 6;
+        assert_eq!(is_sporer(z), true);
+        let w: u32 = 0;
+        assert_eq!(is_sporer(w), false);
+        let v: u32 = 8;
+        assert_eq!(is_sporer(v), false);
+    }
+    #[test]
+    fn test_is_root() {
+        let mut x: u32 = 5;
+        x += 64;
+        assert_eq!(is_root(x), false);
+        let mut y: u32 = 2;
+        y += 128;
+        assert_eq!(is_root(y), true);
+        let z: u32 = 2;
+        assert_eq!(is_root(z), true);
+        let w: u32 = 0;
+        assert_eq!(is_root(w), false);
+        let v: u32 = 6;
+        assert_eq!(is_root(v), false);
     }
 }
 pub mod player {
@@ -461,7 +704,9 @@ fn main() {
             if owner >= 0 {
                 new_elem += 32 * (new_owner + 1);
             }
-            let mut _organ_id = parse_input!(inputs[4], u32);
+            let mut organ_id = parse_input!(inputs[4], u32);
+            organ_id = organ_id << 24;
+            new_elem += organ_id;
             let organ_dir = inputs[5].trim().to_string();
             if organ_dir == "S" {
                 new_elem += 128;
@@ -498,22 +743,27 @@ fn main() {
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let required_actions_count = parse_input!(input_line, i32);
-        for id in 0..required_actions_count as u32 {
+        for num_id in 0..required_actions_count as u32 {
             let mut output = String::new();
-            let (x_new, y_new, order, direction) = arena.next_move(id * 2 + 1);
-            if true {
+            let (id, x_new, y_new, order, direction) = arena.next_move(num_id);
+            if order == "SPORE " {
+                output.push_str("SPORE ");
+                output.push_str(&direction);
+                output.push_str(" ");
+                output.push_str(&x_new.to_string());
+                output.push_str(" ");
+                output.push_str(&y_new.to_string());
+            } else {
                 output.push_str("GROW ");
-                output.push_str(&(id * 2 + 1).to_string());
+                output.push_str(&(id).to_string());
                 output.push_str(" ");
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
                 output.push_str(&order);
                 output.push_str(&direction);
-                println!("{}", output);
-            } else {
-                println!("WAIT");
             }
+            println!("{}", output);
         }
     }
 }
