@@ -106,7 +106,7 @@ fn main() {
 
             // id of this entity if it's an organ, 0 otherwise ->
             let mut organ_id = parse_input!(inputs[4], u32);
-            organ_id = organ_id << 24;
+            organ_id = organ_id << 21;
             new_elem += organ_id;
 
             let organ_dir = inputs[5].trim().to_string();
@@ -121,7 +121,7 @@ fn main() {
             let _organ_parent_id = parse_input!(inputs[6], u32);
             let mut _organ_root_id = parse_input!(inputs[7], u32);
             if _organ_root_id > 0 {
-                _organ_root_id = _organ_root_id << 16;
+                _organ_root_id = _organ_root_id << 10;
                 new_elem += _organ_root_id;
             }
 

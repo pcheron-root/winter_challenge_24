@@ -1,15 +1,10 @@
-// ! tentacule 3 ont des problemes d'orientation
-//   il faut comprendre pourquoi ca merde et le fix
-// ? est-ce que c'est solve ?
+// ! construire des trucs a la fin de ma boucle
+// ! ne pas ecraser les prots que je mange
 
-// ! faire une instruction au pif si jamais j'ai rien trouve de mieux a faire
-//   attention, mettre un basic sur une prot est moins bien que de mettre un basic ailleur
-//   si rien a faire, utiliser la commande wait
+// ! creation de bouche a fix
 
-// ! ameliorer les sporer
+// ! faire les sporer
 //   il faut detechter les endroits loins et proches de 2 des proteines
-
-// ! fix les bouches
 
 use super::Player;
 
@@ -28,7 +23,33 @@ impl Arena {
         }
     }
 
-    pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String) {
+    // is_from my actual organ
+    pub fn find_my_id(&self, x: usize, y: usize, origin: u32) -> u32 {
+        if x + 1 < self.nb_col
+            && is_mine(self.map[y * self.nb_col + x + 1])
+            && self.map[y * self.nb_col + x + 1] << 11 >> 21 == origin
+        {
+            return self.map[y * self.nb_col + x + 1] >> 21;
+        } else if x > 0
+            && is_mine(self.map[y * self.nb_col + x - 1])
+            && self.map[y * self.nb_col + x - 1] << 11 >> 21 == origin
+        {
+            return self.map[y * self.nb_col + x - 1] >> 21;
+        } else if y + 1 < self.nb_lin
+            && is_mine(self.map[(y + 1) * self.nb_col + x])
+            && self.map[(y + 1) * self.nb_col + x] << 11 >> 21 == origin
+        {
+            return self.map[(y + 1) * self.nb_col + x] >> 21;
+        } else if y > 0
+            && is_mine(self.map[(y - 1) * self.nb_col + x])
+            && self.map[(y - 1) * self.nb_col + x] << 11 >> 21 == origin
+        {
+            return self.map[(y - 1) * self.nb_col + x] >> 21;
+        }
+        0
+    }
+
+    pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String, u32) {
         let mut map = vec![5; self.nb_col * self.nb_lin];
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
@@ -49,12 +70,15 @@ impl Arena {
                                 if map[y * self.nb_col + x + 1] == 1
                                     && !self.is_forbidden_move(x + 1, y)
                                 {
+                                    eprint!("dist 3");
+                                    print_map(map.clone(), self.nb_col, self.nb_lin);
                                     return (
                                         true,
                                         x + 1,
                                         y,
                                         " TENTACLE".to_string(),
                                         " W".to_string(),
+                                        self.find_my_id(x + 1, y, id),
                                     );
                                 }
                             }
@@ -62,23 +86,31 @@ impl Arena {
                                 if map[y * self.nb_col + x - 1] == 1
                                     && !self.is_forbidden_move(x - 1, y)
                                 {
+                                    eprint!("dist 3");
+
+                                    print_map(map.clone(), self.nb_col, self.nb_lin);
                                     return (
                                         true,
                                         x - 1,
                                         y,
                                         " TENTACLE".to_string(),
                                         " E".to_string(),
+                                        self.find_my_id(x - 1, y, id),
                                     );
                                 }
                             }
                             if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
                                 if map[(y + 1) * self.nb_col + x] == 1 {
+                                    eprint!("dist 3");
+
+                                    print_map(map.clone(), self.nb_col, self.nb_lin);
                                     return (
                                         true,
                                         x,
                                         y + 1,
                                         " TENTACLE".to_string(),
                                         " N".to_string(),
+                                        self.find_my_id(x, y + 1, id),
                                     );
                                 }
                             }
@@ -86,12 +118,16 @@ impl Arena {
                                 if map[(y - 1) * self.nb_col + x] == 1
                                     && !self.is_forbidden_move(x, y - 1)
                                 {
+                                    eprint!("dist 3");
+
+                                    print_map(map.clone(), self.nb_col, self.nb_lin);
                                     return (
                                         true,
                                         x,
                                         y - 1,
                                         " TENTACLE".to_string(),
                                         " S".to_string(),
+                                        self.find_my_id(x, y - 1, id),
                                     );
                                 }
                             }
@@ -138,29 +174,69 @@ impl Arena {
                 if map[y * self.nb_col + x] == 2 && self.is_enemy_next_to(x, y) {
                     if x + 1 < self.nb_col {
                         if map[y * self.nb_col + x + 1] == 1 && !self.is_forbidden_move(x + 1, y) {
-                            return (true, x + 1, y, " TENTACLE".to_string(), " W".to_string());
+                            print_map(map.clone(), self.nb_col, self.nb_lin);
+                            eprint!("dist 2");
+
+                            return (
+                                true,
+                                x + 1,
+                                y,
+                                " TENTACLE".to_string(),
+                                " W".to_string(),
+                                self.find_my_id(x + 1, y, id),
+                            );
                         }
                     }
                     if x > 0 {
                         if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
-                            return (true, x - 1, y, " TENTACLE".to_string(), " E".to_string());
+                            print_map(map.clone(), self.nb_col, self.nb_lin);
+                            eprint!("dist 2");
+
+                            return (
+                                true,
+                                x - 1,
+                                y,
+                                " TENTACLE".to_string(),
+                                " E".to_string(),
+                                self.find_my_id(x - 1, y, id),
+                            );
                         }
                     }
                     if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
                         if map[(y + 1) * self.nb_col + x] == 1 {
-                            return (true, x, y + 1, " TENTACLE".to_string(), " N".to_string());
+                            print_map(map.clone(), self.nb_col, self.nb_lin);
+                            eprint!("dist 2");
+
+                            return (
+                                true,
+                                x,
+                                y + 1,
+                                " TENTACLE".to_string(),
+                                " N".to_string(),
+                                self.find_my_id(x, y + 1, id),
+                            );
                         }
                     }
                     if y > 0 {
                         if map[(y - 1) * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y - 1)
                         {
-                            return (true, x, y - 1, " TENTACLE".to_string(), " S".to_string());
+                            print_map(map.clone(), self.nb_col, self.nb_lin);
+                            eprint!("dist 2");
+
+                            return (
+                                true,
+                                x,
+                                y - 1,
+                                " TENTACLE".to_string(),
+                                " S".to_string(),
+                                self.find_my_id(x, y - 1, id),
+                            );
                         }
                     }
                 }
             }
         }
-        return (false, 0, 0, "".to_string(), "".to_string());
+        return (false, 0, 0, "".to_string(), "".to_string(), 0);
     }
 
     pub fn is_expandable(&self, id: u32) -> (bool, usize, usize, String, String) {
@@ -230,7 +306,7 @@ impl Arena {
                     && is_from_organ(self.map[y * self.nb_col + x], id)
                 {
                     if x + 12 < self.nb_col - 1 && !is_mine(self.map[y * self.nb_col + x + 12]) {
-                        let id_sporer = self.map[y * self.nb_col + x] >> 24;
+                        let id_sporer = self.map[y * self.nb_col + x] >> 21;
                         return (true, x + 12, y, "SPORE ".to_string(), id_sporer.to_string());
                     }
                 }
@@ -247,7 +323,7 @@ impl Arena {
                     if num_id > 0 {
                         num_id -= 1;
                     } else {
-                        return self.map[y * self.nb_col + x] >> 24;
+                        return self.map[y * self.nb_col + x] >> 21;
                     }
                 }
             }
@@ -263,26 +339,26 @@ impl Arena {
     ) -> (u32, usize, usize, String, String) {
         let id = self.find_right_id(num_id);
         if guapo.b > 0 && guapo.c > 0 {
-            let (is_near, x, y, order, direction) = self.is_enemy_near(id);
+            let (is_near, x, y, order, direction, new_id) = self.is_enemy_near(id);
             if is_near {
                 eprintln!("je me defend");
-                return (id, x, y, order, direction);
+                return (new_id, x, y, order, direction);
             }
         }
-        if guapo.a > 0 && guapo.b > 0 && guapo.c > 0 && guapo.d > 0 {
-            let (is_charged, x, y, order, direction) = self.is_charged(id);
-            if is_charged {
-                eprintln!("je lance un spore");
-                return (id, x, y, order, direction);
-            }
-        }
-        if guapo.b > 0 && guapo.d > 0 {
-            let (is_expandable, x, y, order, direction) = self.is_expandable(id);
-            if is_expandable {
-                eprintln!("je lance un sporer");
-                return (id, x, y, order, direction);
-            }
-        }
+        // if guapo.a > 0 && guapo.b > 0 && guapo.c > 0 && guapo.d > 0 {
+        //     let (is_charged, x, y, order, direction) = self.is_charged(id);
+        //     if is_charged {
+        //         eprintln!("je lance un spore");
+        //         return (id, x, y, order, direction);
+        //     }
+        // }
+        // if guapo.b > 0 && guapo.d > 0 {
+        //     let (is_expandable, x, y, order, direction) = self.is_expandable(id);
+        //     if is_expandable {
+        //         eprintln!("je lance un sporer");
+        //         return (id, x, y, order, direction);
+        //     }
+        // }
         return self.looking_for_prot(id, guapo, oppo);
     }
 
@@ -299,6 +375,7 @@ impl Arena {
                     map[y * self.nb_col + x] = 64;
                 }
                 if is_mine(self.map[y * self.nb_col + x]) {
+                    // from my actual organ
                     map[y * self.nb_col + x] = 0;
                 }
             }
@@ -318,7 +395,13 @@ impl Arena {
                                     && !self.is_ate(x + 1, y)
                                     && !self.is_forbidden_move(x, y)
                                 {
-                                    return (id, x, y, " HARVESTER".to_string(), " E".to_string());
+                                    return (
+                                        self.find_my_id(x, y, id),
+                                        x,
+                                        y,
+                                        " HARVESTER".to_string(),
+                                        " E".to_string(),
+                                    );
                                 }
                             }
                             if x > 0
@@ -331,7 +414,13 @@ impl Arena {
                                     && !self.is_ate(x - 1, y)
                                     && !self.is_forbidden_move(x, y)
                                 {
-                                    return (id, x, y, " HARVESTER".to_string(), " W".to_string());
+                                    return (
+                                        self.find_my_id(x, y, id),
+                                        x,
+                                        y,
+                                        " HARVESTER".to_string(),
+                                        " W".to_string(),
+                                    );
                                 }
                             }
                             if y + 1 < self.nb_lin
@@ -344,7 +433,13 @@ impl Arena {
                                     && !self.is_ate(x, y + 1)
                                     && !self.is_forbidden_move(x, y)
                                 {
-                                    return (id, x, y, " HARVESTER".to_string(), " S".to_string());
+                                    return (
+                                        self.find_my_id(x, y, id),
+                                        x,
+                                        y,
+                                        " HARVESTER".to_string(),
+                                        " S".to_string(),
+                                    );
                                 }
                             }
                             if y > 0
@@ -353,11 +448,17 @@ impl Arena {
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
                                 if i == 1
-                                    && is_protein(self.map[(y + 1) * self.nb_col + x])
-                                    && !self.is_ate(x, y + 1)
+                                    && is_protein(self.map[(y - 1) * self.nb_col + x])
+                                    && !self.is_ate(x, y - 1)
                                     && !self.is_forbidden_move(x, y)
                                 {
-                                    return (id, x, y, " HARVESTER".to_string(), " N".to_string());
+                                    return (
+                                        self.find_my_id(x, y, id),
+                                        x,
+                                        y,
+                                        " HARVESTER".to_string(),
+                                        " N".to_string(),
+                                    );
                                 }
                             }
                         }
@@ -368,10 +469,11 @@ impl Arena {
                             if i == 1 {
                                 map[y * self.nb_col + x] = 2;
                             } else {
-                                eprintln!("I build to rush protein");
                                 if guapo.a > 0 {
+                                    eprintln!("rush closest prot with basic");
                                     return (id, x, y, " BASIC".to_string(), "".to_string());
                                 } else if guapo.b > 0 && guapo.c > 0 {
+                                    eprintln!("rush closest prot with tentacle");
                                     return (id, x, y, " TENTACLE".to_string(), " W".to_string());
                                 }
                             }
@@ -391,9 +493,21 @@ impl Arena {
                     && !self.is_forbidden_move(x, y)
                 {
                     if guapo.a > 0 {
-                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                        return (
+                            self.find_my_id(x, y, id),
+                            x,
+                            y,
+                            " BASIC".to_string(),
+                            "".to_string(),
+                        );
                     } else if guapo.b > 0 && guapo.c > 0 {
-                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                        return (
+                            self.find_my_id(x, y, id),
+                            x,
+                            y,
+                            " TENTACLE".to_string(),
+                            " W".to_string(),
+                        );
                     }
                 }
             }
@@ -406,15 +520,34 @@ impl Arena {
                     && !self.is_forbidden_move(x, y)
                 {
                     if guapo.a > 0 {
-                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                        return (
+                            self.find_my_id(x, y, id),
+                            x,
+                            y,
+                            " BASIC".to_string(),
+                            "".to_string(),
+                        );
+                    } else if guapo.b > 0 && guapo.d > 0 {
+                        return (
+                            self.find_my_id(x, y, id),
+                            x,
+                            y,
+                            " SPORER".to_string(),
+                            "".to_string(),
+                        );
                     } else if guapo.b > 0 && guapo.c > 0 {
-                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                        return (
+                            self.find_my_id(x, y, id),
+                            x,
+                            y,
+                            " TENTACLE".to_string(),
+                            " W".to_string(),
+                        );
                     }
                 }
             }
         }
-        // return wait;
-        return (id, 0, 0, "WAIT".to_string(), "".to_string());
+        return (0, 0, 0, "WAIT".to_string(), "".to_string());
     }
 
     pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
@@ -578,7 +711,7 @@ pub fn is_wall(mut x: u32) -> bool {
 }
 
 pub fn is_from_organ(x: u32, id: u32) -> bool {
-    id == (x << 8 >> 24)
+    id == (x << 11 >> 21)
 }
 
 pub fn is_protein(mut x: u32) -> bool {
@@ -614,7 +747,7 @@ pub fn print_enemies(mut map: Vec<u32>, slice: usize, nb_slice: usize) {
 pub fn print_root(mut map: Vec<u32>, slice: usize, nb_slice: usize) {
     eprintln!("print enemies\n");
     for j in 0..(slice * nb_slice) {
-        map[j] = map[j] >> 16;
+        map[j] = map[j] << 11 >> 21;
     }
     for i in 0..nb_slice {
         eprintln!("{:?}\n", &map[(i * slice)..(slice * (1 + i))]);
