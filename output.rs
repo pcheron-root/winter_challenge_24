@@ -1,5 +1,5 @@
 pub mod arena {
-    use core::num;
+    use super::Player;
     pub struct Arena {
         pub map: Vec<u32>,
         pub nb_col: usize,
@@ -14,7 +14,7 @@ pub mod arena {
             }
         }
         pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String) {
-            let mut map = vec![4; self.nb_col * self.nb_lin];
+            let mut map = vec![5; self.nb_col * self.nb_lin];
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if is_wall(self.map[y * self.nb_col + x]) {
@@ -25,41 +25,120 @@ pub mod arena {
                     }
                 }
             }
-            for i in 0..2 {
+            for i in 0..3 {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
+                        if i == 2 {
+                            if is_oppo(self.map[y * self.nb_col + x]) {
+                                if x + 1 < self.nb_col {
+                                    if map[y * self.nb_col + x + 1] == 1 &&
+                                        !self.is_forbidden_move(x + 1, y)
+                                    {
+                                        return (
+                                            true,
+                                            x + 1,
+                                            y,
+                                            " TENTACLE".to_string(),
+                                            " W".to_string(),
+                                        );
+                                    }
+                                }
+                                if x > 0 {
+                                    if map[y * self.nb_col + x - 1] == 1 &&
+                                        !self.is_forbidden_move(x - 1, y)
+                                    {
+                                        return (
+                                            true,
+                                            x + 1,
+                                            y,
+                                            " TENTACLE".to_string(),
+                                            " E".to_string(),
+                                        );
+                                    }
+                                }
+                                if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
+                                    if map[(y + 1) * self.nb_col + x] == 1 {
+                                        return (
+                                            true,
+                                            x,
+                                            y + 1,
+                                            " TENTACLE".to_string(),
+                                            " N".to_string(),
+                                        );
+                                    }
+                                }
+                                if y > 0 {
+                                    if map[(y - 1) * self.nb_col + x] == 1 &&
+                                        !self.is_forbidden_move(x, y - 1)
+                                    {
+                                        return (
+                                            true,
+                                            x,
+                                            y - 1,
+                                            " TENTACLE".to_string(),
+                                            " S".to_string(),
+                                        );
+                                    }
+                                }
+                            }
+                        }
                         if map[y * self.nb_col + x] == i {
+                            if i == 1 {
+                                if is_oppo(self.map[y * self.nb_col + x]) {
+                                    map[y * self.nb_col + x] = 2;
+                                }
+                            }
                             if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
                                 map[y * self.nb_col + x + 1] != 64
                             {
                                 map[y * self.nb_col + x + 1] = i + 1;
-                                if i == 1 && is_oppo(self.map[y * self.nb_col + x + 1]) {
-                                    return (true, x, y, " TENTACLE".to_string(), " E".to_string());
-                                }
                             }
                             if x >= 1 && map[y * self.nb_col + x - 1] > i + 1 &&
                                 map[y * self.nb_col + x - 1] != 64
                             {
                                 map[y * self.nb_col + x - 1] = i + 1;
-                                if i == 1 && is_oppo(self.map[y * self.nb_col + x - 1]) {
-                                    return (true, x, y, " TENTACLE".to_string(), " W".to_string());
-                                }
                             }
                             if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
                                 map[(y + 1) * self.nb_col + x] != 64
                             {
                                 map[(y + 1) * self.nb_col + x] = i + 1;
-                                if i == 1 && is_oppo(self.map[(y + 1) * self.nb_col + x]) {
-                                    return (true, x, y, " TENTACLE".to_string(), " S".to_string());
-                                }
                             }
                             if y >= 1 && map[(y - 1) * self.nb_col + x] > i + 1 &&
                                 map[(y - 1) * self.nb_col + x] != 64
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
-                                if i == 1 && is_oppo(self.map[(y - 1) * self.nb_col + x]) {
-                                    return (true, x, y, " TENTACLE".to_string(), " N".to_string());
-                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 2 && self.is_enemy_next_to(x, y) {
+                        if x + 1 < self.nb_col {
+                            if map[y * self.nb_col + x + 1] == 1 &&
+                                !self.is_forbidden_move(x + 1, y)
+                            {
+                                return (true, x + 1, y, " TENTACLE".to_string(), " W".to_string());
+                            }
+                        }
+                        if x > 0 {
+                            if map[y * self.nb_col + x - 1] == 1 &&
+                                !self.is_forbidden_move(x - 1, y)
+                            {
+                                return (true, x + 1, y, " TENTACLE".to_string(), " E".to_string());
+                            }
+                        }
+                        if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
+                            if map[(y + 1) * self.nb_col + x] == 1 {
+                                return (true, x, y + 1, " TENTACLE".to_string(), " N".to_string());
+                            }
+                        }
+                        if y > 0 {
+                            if map[(y - 1) * self.nb_col + x] == 1 &&
+                                !self.is_forbidden_move(x, y - 1)
+                            {
+                                return (true, x, y - 1, " TENTACLE".to_string(), " S".to_string());
                             }
                         }
                     }
@@ -113,7 +192,9 @@ pub mod arena {
                                 break;
                             }
                             if i == 12 && !is_protein(self.map[y * self.nb_col + x + i]) {
-                                if !self.is_organism_next_to(x + i, y) {
+                                if !self.is_organism_next_to(x + i, y) &&
+                                    !self.is_forbidden_move(x, y)
+                                {
                                     return (true, x, y, " SPORER".to_string(), " E".to_string());
                                 }
                             }
@@ -156,26 +237,42 @@ pub mod arena {
             }
             0
         }
-        pub fn next_move(&self, num_id: u32) -> (u32, usize, usize, String, String) {
+        pub fn next_move(
+            &self,
+            num_id: u32,
+            guapo: &Player,
+            oppo: &Player,
+        ) -> (u32, usize, usize, String, String) {
             let id = self.find_right_id(num_id);
-            let (is_near, x, y, order, direction) = self.is_enemy_near(id);
-            if is_near {
-                eprintln!("je me defend");
-                return (id, x, y, order, direction);
+            if guapo.b > 0 && guapo.c > 0 {
+                let (is_near, x, y, order, direction) = self.is_enemy_near(id);
+                if is_near {
+                    eprintln!("je me defend");
+                    return (id, x, y, order, direction);
+                }
             }
-            let (is_charged, x, y, order, direction) = self.is_charged(id);
-            if is_charged {
-                eprintln!("je lance un spore");
-                return (id, x, y, order, direction);
+            if guapo.a > 0 && guapo.b > 0 && guapo.c > 0 && guapo.d > 0 {
+                let (is_charged, x, y, order, direction) = self.is_charged(id);
+                if is_charged {
+                    eprintln!("je lance un spore");
+                    return (id, x, y, order, direction);
+                }
             }
-            let (is_expandable, x, y, order, direction) = self.is_expandable(id);
-            if is_expandable {
-                eprintln!("je lance un sporer");
-                return (id, x, y, order, direction);
+            if guapo.b > 0 && guapo.d > 0 {
+                let (is_expandable, x, y, order, direction) = self.is_expandable(id);
+                if is_expandable {
+                    eprintln!("je lance un sporer");
+                    return (id, x, y, order, direction);
+                }
             }
-            return self.looking_for_prot(id);
+            return self.looking_for_prot(id, guapo, oppo);
         }
-        pub fn looking_for_prot(&self, id: u32) -> (u32, usize, usize, String, String) {
+        pub fn looking_for_prot(
+            &self,
+            id: u32,
+            guapo: &Player,
+            oppo: &Player,
+        ) -> (u32, usize, usize, String, String) {
             let mut map = vec![4; self.nb_col * self.nb_lin];
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
@@ -191,61 +288,123 @@ pub mod arena {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
                         if map[y * self.nb_col + x] == i {
-                            if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
-                                map[y * self.nb_col + x + 1] != 64
-                            {
-                                map[y * self.nb_col + x + 1] = i + 1;
-                                if i == 1 && is_protein(self.map[y * self.nb_col + x + 1]) &&
-                                    !self.is_ate(x + 1, y)
+                            if guapo.c > 0 && guapo.d > 0 {
+                                if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
+                                    map[y * self.nb_col + x + 1] != 64
                                 {
-                                    return (id, x, y, " HARVESTER".to_string(), " E".to_string());
+                                    map[y * self.nb_col + x + 1] = i + 1;
+                                    if i == 1 && is_protein(self.map[y * self.nb_col + x + 1]) &&
+                                        !self.is_ate(x + 1, y) &&
+                                        !self.is_forbidden_move(x, y)
+                                    {
+                                        return (
+                                            id,
+                                            x,
+                                            y,
+                                            " HARVESTER".to_string(),
+                                            " E".to_string(),
+                                        );
+                                    }
+                                }
+                                if x > 0 && map[y * self.nb_col + x - 1] > i + 1 &&
+                                    map[y * self.nb_col + x - 1] != 64
+                                {
+                                    map[y * self.nb_col + x - 1] = i + 1;
+                                    if i == 1 && is_protein(self.map[y * self.nb_col + x - 1]) &&
+                                        !self.is_ate(x - 1, y) &&
+                                        !self.is_forbidden_move(x, y)
+                                    {
+                                        return (
+                                            id,
+                                            x,
+                                            y,
+                                            " HARVESTER".to_string(),
+                                            " W".to_string(),
+                                        );
+                                    }
+                                }
+                                if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
+                                    map[(y + 1) * self.nb_col + x] != 64
+                                {
+                                    map[(y + 1) * self.nb_col + x] = i + 1;
+                                    if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
+                                        !self.is_ate(x, y + 1) &&
+                                        !self.is_forbidden_move(x, y)
+                                    {
+                                        return (
+                                            id,
+                                            x,
+                                            y,
+                                            " HARVESTER".to_string(),
+                                            " S".to_string(),
+                                        );
+                                    }
+                                }
+                                if y > 0 && map[(y - 1) * self.nb_col + x] > i + 1 &&
+                                    map[(y - 1) * self.nb_col + x] != 64
+                                {
+                                    map[(y - 1) * self.nb_col + x] = i + 1;
+                                    if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
+                                        !self.is_ate(x, y + 1) &&
+                                        !self.is_forbidden_move(x, y)
+                                    {
+                                        return (
+                                            id,
+                                            x,
+                                            y,
+                                            " HARVESTER".to_string(),
+                                            " N".to_string(),
+                                        );
+                                    }
                                 }
                             }
-                            if x > 0 && map[y * self.nb_col + x - 1] > i + 1 &&
-                                map[y * self.nb_col + x - 1] != 64
+                            if is_protein(self.map[y * self.nb_col + x]) && !self.is_ate(x, y) &&
+                                !self.is_forbidden_move(x, y)
                             {
-                                map[y * self.nb_col + x - 1] = i + 1;
-                                if i == 1 && is_protein(self.map[y * self.nb_col + x - 1]) &&
-                                    !self.is_ate(x - 1, y)
-                                {
-                                    return (id, x, y, " HARVESTER".to_string(), " W".to_string());
+                                if i == 1 {
+                                    map[y * self.nb_col + x] = 2;
+                                } else {
+                                    if guapo.a > 0 {
+                                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                                    } else if guapo.b > 0 && guapo.c > 0 {
+                                        return (
+                                            id,
+                                            x,
+                                            y,
+                                            " TENTACLE".to_string(),
+                                            " W".to_string(),
+                                        );
+                                    }
                                 }
-                            }
-                            if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
-                                map[(y + 1) * self.nb_col + x] != 64
-                            {
-                                map[(y + 1) * self.nb_col + x] = i + 1;
-                                if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
-                                    !self.is_ate(x, y + 1)
-                                {
-                                    return (id, x, y, " HARVESTER".to_string(), " S".to_string());
-                                }
-                            }
-                            if y > 0 && map[(y - 1) * self.nb_col + x] > i + 1 &&
-                                map[(y - 1) * self.nb_col + x] != 64
-                            {
-                                map[(y - 1) * self.nb_col + x] = i + 1;
-                                if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
-                                    !self.is_ate(x, y + 1)
-                                {
-                                    return (id, x, y, " HARVESTER".to_string(), " N".to_string());
-                                }
-                            }
-                            if is_protein(self.map[y * self.nb_col + x]) && !self.is_ate(x, y) {
-                                return (id, x, y, " BASIC".to_string(), "".to_string());
                             }
                         }
                     }
                 }
             }
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) {
-                        return (id, x, y, " BASIC".to_string(), "".to_string());
+            if guapo.a > 0 {
+                for y in 0..self.nb_lin {
+                    for x in 0..self.nb_col {
+                        if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) &&
+                            !self.is_forbidden_move(x, y)
+                        {
+                            return (id, x, y, " BASIC".to_string(), "".to_string());
+                        }
                     }
                 }
             }
             return (id, 0, 0, " BASIC".to_string(), "".to_string());
+        }
+        pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
+            if y > 0 && is_oppo(self.map[(y - 1) * self.nb_col + x]) {
+                return true;
+            } else if y + 1 < self.nb_lin && is_oppo(self.map[(y + 1) * self.nb_col + x]) {
+                return true;
+            } else if x > 0 && is_oppo(self.map[y * self.nb_col + x - 1]) {
+                return true;
+            } else if x + 1 < self.nb_col && is_oppo(self.map[y * self.nb_col + x + 1]) {
+                return true;
+            }
+            false
         }
         pub fn is_organism_next_to(&self, x: usize, y: usize) -> bool {
             let mut map = vec![6; self.nb_col * self.nb_lin];
@@ -269,7 +428,6 @@ pub mod arena {
                         if map[j * self.nb_col + k] == i {
                             if k + 1 < self.nb_col {
                                 if map[j * self.nb_col + k + 1] > 8 {
-                                    eprintln!("desole un organ est pas loin 1");
                                     return true;
                                 } else if map[j * self.nb_col + k + 1] < 8 {
                                     map[j * self.nb_col + k + 1] = i + 1
@@ -277,7 +435,6 @@ pub mod arena {
                             }
                             if k > 0 {
                                 if map[j * self.nb_col + k - 1] > 8 {
-                                    eprintln!("desole un organ est pas loin 2 ");
                                     return true;
                                 } else if map[j * self.nb_col + k - 1] < 8 {
                                     map[j * self.nb_col + k - 1] = i + 1
@@ -285,11 +442,6 @@ pub mod arena {
                             }
                             if j + 1 < self.nb_lin {
                                 if map[(j + 1) * self.nb_col + k] > 8 {
-                                    eprintln!(
-                                        "desole un organ est pas loin 3 pour x {} y {}",
-                                        k,
-                                        j
-                                    );
                                     return true;
                                 } else if map[(j + 1) * self.nb_col + k] < 8 {
                                     map[(j + 1) * self.nb_col + k] = i + 1
@@ -297,7 +449,6 @@ pub mod arena {
                             }
                             if j > 0 {
                                 if map[(j - 1) * self.nb_col + k] > 8 {
-                                    eprintln!("desole un organ est pas loin 4 ");
                                     return true;
                                 } else if map[(j - 1) * self.nb_col + k] < 8 {
                                     map[(j - 1) * self.nb_col + k] = i + 1
@@ -325,6 +476,39 @@ pub mod arena {
             } else if x + 1 < self.nb_col && is_mouth(self.map[y * self.nb_col + x + 1]) &&
                        is_west(self.map[y * self.nb_col + x + 1])
             {
+                return true;
+            }
+            false
+        }
+        pub fn is_tentacled(&self, x: usize, y: usize) -> bool {
+            if y > 0 && is_tentacle(self.map[(y - 1) * self.nb_col + x]) &&
+                is_oppo(self.map[(y - 1) * self.nb_col + x]) &&
+                is_south(self.map[(y - 1) * self.nb_col + x])
+            {
+                return true;
+            } else if y + 1 < self.nb_lin && is_tentacle(self.map[(y + 1) * self.nb_col + x]) &&
+                       is_oppo(self.map[(y + 1) * self.nb_col + x]) &&
+                       is_north(self.map[(y + 1) * self.nb_col + x])
+            {
+                return true;
+            } else if x > 0 && is_tentacle(self.map[y * self.nb_col + x - 1]) &&
+                       is_oppo(self.map[y * self.nb_col + x - 1]) &&
+                       is_east(self.map[y * self.nb_col + x - 1])
+            {
+                return true;
+            } else if x + 1 < self.nb_col && is_tentacle(self.map[y * self.nb_col + x + 1]) &&
+                       is_oppo(self.map[y * self.nb_col + x + 1]) &&
+                       is_west(self.map[y * self.nb_col + x + 1])
+            {
+                return true;
+            }
+            false
+        }
+        pub fn is_forbidden_move(&self, x: usize, y: usize) -> bool {
+            if is_oppo(self.map[y * self.nb_col + x]) {
+                return true;
+            }
+            if self.is_tentacled(x, y) {
                 return true;
             }
             false
@@ -414,6 +598,12 @@ pub mod arena {
         }
         false
     }
+    pub fn is_tentacle(x: u32) -> bool {
+        if x << 27 >> 27 == 4 {
+            return true;
+        }
+        false
+    }
     pub fn is_mouth(x: u32) -> bool {
         if (x & 5) == 5 {
             return true;
@@ -444,175 +634,323 @@ pub mod arena {
         }
         false
     }
-    #[test]
-    fn test_is_mine() {
-        let mut x: u32 = 3;
-        x += 64;
-        assert_eq!(is_mine(x), true);
-        let mut y: u32 = 8;
-        y += 64;
-        assert_eq!(is_mine(y), true);
-        let mut z: u32 = 8;
-        z += 16;
-        assert_eq!(is_mine(z), false);
-    }
-    #[test]
-    fn test_is_oppo() {
-        let mut x: u32 = 3;
-        x += 32;
-        assert_eq!(is_oppo(x), true);
-        let mut y: u32 = 8;
-        y += 32;
-        assert_eq!(is_oppo(y), true);
-        let mut z: u32 = 8;
-        z += 64;
-        assert_eq!(is_oppo(z), false);
-    }
-    #[test]
-    fn test_is_wall() {
-        let mut x: u32 = 1;
-        x += 64;
-        assert_eq!(is_wall(x), true);
-        let y: u32 = 1;
-        assert_eq!(is_wall(y), true);
-        let mut z: u32 = 4;
-        z += 64;
-        assert_eq!(is_wall(z), false);
-    }
-    #[test]
-    fn test_is_protein() {
-        let mut x: u32 = 7;
-        x += 64;
-        assert_eq!(is_protein(x), true);
-        let y: u32 = 8;
-        assert_eq!(is_protein(y), true);
-        let mut z: u32 = 4;
-        z += 64;
-        assert_eq!(is_protein(z), false);
-        let w: u32 = 6;
-        assert_eq!(is_protein(w), false);
-    }
-    #[test]
-    fn test_is_north() {
-        let mut x: u32 = 7;
-        x += 64;
-        assert_eq!(is_north(x), true);
-        let y: u32 = 8;
-        assert_eq!(is_north(y), true);
-        let mut z: u32 = 4;
-        z += 128;
-        assert_eq!(is_north(z), false);
-    }
-    #[test]
-    fn test_is_south() {
-        let mut x: u32 = 7;
-        x += 64;
-        assert_eq!(is_south(x), false);
-        let mut y: u32 = 8;
-        y += 128;
-        assert_eq!(is_south(y), true);
-        let mut z: u32 = 4;
-        z += 128 + 256;
-        assert_eq!(is_south(z), false);
-    }
-    #[test]
-    fn test_is_west() {
-        let mut x: u32 = 7;
-        x += 64;
-        assert_eq!(is_west(x), false);
-        let mut y: u32 = 8;
-        y += 128;
-        assert_eq!(is_west(y), false);
-        let mut z: u32 = 4;
-        z += 256;
-        assert_eq!(is_west(z), true);
-        let mut w: u32 = 4;
-        w += 256 + 128;
-        assert_eq!(is_west(w), false);
-    }
-    #[test]
-    fn test_is_east() {
-        let mut x: u32 = 7;
-        x += 64;
-        assert_eq!(is_east(x), false);
-        let mut y: u32 = 8;
-        y += 128;
-        assert_eq!(is_east(y), false);
-        let mut z: u32 = 4;
-        z += 256;
-        assert_eq!(is_east(z), false);
-        let mut w: u32 = 4;
-        w += 256 + 128;
-        assert_eq!(is_east(w), true);
-    }
-    #[test]
-    fn test_is_mouth() {
-        let mut x: u32 = 5;
-        x += 64;
-        assert_eq!(is_mouth(x), true);
-        let mut y: u32 = 5;
-        y += 128;
-        assert_eq!(is_mouth(y), true);
-        let mut z: u32 = 8;
-        z += 128;
-        assert_eq!(is_mouth(z), false);
-    }
-    #[test]
-    fn test_is_free() {
-        let mut x: u32 = 5;
-        x += 64;
-        assert_eq!(is_free(x), false);
-        let mut y: u32 = 5;
-        y += 128;
-        assert_eq!(is_free(y), true);
-        let mut z: u32 = 8;
-        z += 32;
-        assert_eq!(is_free(z), false);
-    }
-    #[test]
-    fn test_is_crossable() {
-        let mut x: u32 = 5;
-        x += 64;
-        assert_eq!(is_crossable(x), false);
-        let mut y: u32 = 6;
-        y += 128;
-        assert_eq!(is_crossable(y), false);
-        let z: u32 = 8;
-        assert_eq!(is_crossable(z), true);
-        let w: u32 = 0;
-        assert_eq!(is_crossable(w), true);
-        let v: u32 = 8;
-        assert_eq!(is_crossable(v), true);
-    }
-    #[test]
-    fn test_is_sporer() {
-        let mut x: u32 = 5;
-        x += 64;
-        assert_eq!(is_sporer(x), false);
-        let mut y: u32 = 6;
-        y += 128;
-        assert_eq!(is_sporer(y), true);
-        let z: u32 = 6;
-        assert_eq!(is_sporer(z), true);
-        let w: u32 = 0;
-        assert_eq!(is_sporer(w), false);
-        let v: u32 = 8;
-        assert_eq!(is_sporer(v), false);
-    }
-    #[test]
-    fn test_is_root() {
-        let mut x: u32 = 5;
-        x += 64;
-        assert_eq!(is_root(x), false);
-        let mut y: u32 = 2;
-        y += 128;
-        assert_eq!(is_root(y), true);
-        let z: u32 = 2;
-        assert_eq!(is_root(z), true);
-        let w: u32 = 0;
-        assert_eq!(is_root(w), false);
-        let v: u32 = 6;
-        assert_eq!(is_root(v), false);
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        #[test]
+        fn test_is_mine() {
+            let mut x: u32 = 3;
+            x += 64;
+            assert_eq!(is_mine(x), true);
+            let mut y: u32 = 8;
+            y += 64;
+            assert_eq!(is_mine(y), true);
+            let mut z: u32 = 8;
+            z += 16;
+            assert_eq!(is_mine(z), false);
+        }
+        #[test]
+        fn test_is_oppo() {
+            let mut x: u32 = 3;
+            x += 32;
+            assert_eq!(is_oppo(x), true);
+            let mut y: u32 = 8;
+            y += 32;
+            assert_eq!(is_oppo(y), true);
+            let mut z: u32 = 8;
+            z += 64;
+            assert_eq!(is_oppo(z), false);
+        }
+        #[test]
+        fn test_is_wall() {
+            let mut x: u32 = 1;
+            x += 64;
+            assert_eq!(is_wall(x), true);
+            let y: u32 = 1;
+            assert_eq!(is_wall(y), true);
+            let mut z: u32 = 4;
+            z += 64;
+            assert_eq!(is_wall(z), false);
+        }
+        #[test]
+        fn test_is_protein() {
+            let mut x: u32 = 7;
+            x += 64;
+            assert_eq!(is_protein(x), true);
+            let y: u32 = 8;
+            assert_eq!(is_protein(y), true);
+            let mut z: u32 = 4;
+            z += 64;
+            assert_eq!(is_protein(z), false);
+            let w: u32 = 6;
+            assert_eq!(is_protein(w), false);
+        }
+        #[test]
+        fn test_is_north() {
+            let mut x: u32 = 7;
+            x += 64;
+            assert_eq!(is_north(x), true);
+            let y: u32 = 8;
+            assert_eq!(is_north(y), true);
+            let mut z: u32 = 4;
+            z += 128;
+            assert_eq!(is_north(z), false);
+        }
+        #[test]
+        fn test_is_south() {
+            let mut x: u32 = 7;
+            x += 64;
+            assert_eq!(is_south(x), false);
+            let mut y: u32 = 8;
+            y += 128;
+            assert_eq!(is_south(y), true);
+            let mut z: u32 = 4;
+            z += 128 + 256;
+            assert_eq!(is_south(z), false);
+        }
+        #[test]
+        fn test_is_west() {
+            let mut x: u32 = 7;
+            x += 64;
+            assert_eq!(is_west(x), false);
+            let mut y: u32 = 8;
+            y += 128;
+            assert_eq!(is_west(y), false);
+            let mut z: u32 = 4;
+            z += 256;
+            assert_eq!(is_west(z), true);
+            let mut w: u32 = 4;
+            w += 256 + 128;
+            assert_eq!(is_west(w), false);
+        }
+        #[test]
+        fn test_is_east() {
+            let mut x: u32 = 7;
+            x += 64;
+            assert_eq!(is_east(x), false);
+            let mut y: u32 = 8;
+            y += 128;
+            assert_eq!(is_east(y), false);
+            let mut z: u32 = 4;
+            z += 256;
+            assert_eq!(is_east(z), false);
+            let mut w: u32 = 4;
+            w += 256 + 128;
+            assert_eq!(is_east(w), true);
+        }
+        #[test]
+        fn test_is_mouth() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_mouth(x), true);
+            let mut y: u32 = 5;
+            y += 128;
+            assert_eq!(is_mouth(y), true);
+            let mut z: u32 = 8;
+            z += 128;
+            assert_eq!(is_mouth(z), false);
+        }
+        #[test]
+        fn test_is_free() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_free(x), false);
+            let mut y: u32 = 5;
+            y += 128;
+            assert_eq!(is_free(y), true);
+            let mut z: u32 = 8;
+            z += 32;
+            assert_eq!(is_free(z), false);
+        }
+        #[test]
+        fn test_is_crossable() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_crossable(x), false);
+            let mut y: u32 = 6;
+            y += 128;
+            assert_eq!(is_crossable(y), false);
+            let z: u32 = 8;
+            assert_eq!(is_crossable(z), true);
+            let w: u32 = 0;
+            assert_eq!(is_crossable(w), true);
+            let v: u32 = 8;
+            assert_eq!(is_crossable(v), true);
+        }
+        #[test]
+        fn test_is_sporer() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_sporer(x), false);
+            let mut y: u32 = 6;
+            y += 128;
+            assert_eq!(is_sporer(y), true);
+            let z: u32 = 6;
+            assert_eq!(is_sporer(z), true);
+            let w: u32 = 0;
+            assert_eq!(is_sporer(w), false);
+            let v: u32 = 8;
+            assert_eq!(is_sporer(v), false);
+        }
+        #[test]
+        fn test_is_root() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_root(x), false);
+            let mut y: u32 = 2;
+            y += 128;
+            assert_eq!(is_root(y), true);
+            let z: u32 = 2;
+            assert_eq!(is_root(z), true);
+            let w: u32 = 0;
+            assert_eq!(is_root(w), false);
+            let v: u32 = 6;
+            assert_eq!(is_root(v), false);
+        }
+        #[test]
+        fn test_is_tentacled() {
+            let mut x: u32 = 5;
+            x += 64;
+            assert_eq!(is_tentacle(x), false);
+            let mut y: u32 = 4;
+            y += 128;
+            assert_eq!(is_tentacle(y), true);
+            let z: u32 = 4;
+            assert_eq!(is_tentacle(z), true);
+            let w: u32 = 0;
+            assert_eq!(is_tentacle(w), false);
+            let v: u32 = 6;
+            assert_eq!(is_tentacle(v), false);
+        }
+        #[test]
+        fn test_is_harvester_created_at_the_right_place0() {
+            let mut arena = Arena::new(5, 5);
+            arena.map[0] = 1;
+            arena.map[1] = 1;
+            arena.map[2] = 1;
+            arena.map[3] = 1;
+            arena.map[4] = 1;
+            arena.map[5] = 1;
+            arena.map[6] = 0;
+            arena.map[7] = 0;
+            arena.map[8] = 0;
+            arena.map[9] = 1;
+            arena.map[10] = 1;
+            arena.map[11] = 2 + 64;
+            arena.map[12] = 0;
+            arena.map[13] = 7;
+            arena.map[14] = 1;
+            arena.map[15] = 1;
+            arena.map[16] = 0;
+            arena.map[17] = 0;
+            arena.map[18] = 0;
+            arena.map[19] = 1;
+            arena.map[20] = 1;
+            arena.map[21] = 1;
+            arena.map[22] = 1;
+            arena.map[23] = 1;
+            arena.map[24] = 1;
+            let guapo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let oppo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
+            assert_eq!(x, 2);
+            assert_eq!(y, 2);
+            assert_eq!(order, " HARVESTER".to_string());
+            assert_eq!(direction, " E".to_string());
+        }
+        #[test]
+        fn test_is_harvester_created_at_the_right_place1() {
+            let mut arena = Arena::new(5, 5);
+            arena.map[0] = 1;
+            arena.map[1] = 1;
+            arena.map[2] = 1;
+            arena.map[3] = 1;
+            arena.map[4] = 1;
+            arena.map[5] = 1;
+            arena.map[6] = 0;
+            arena.map[7] = 0;
+            arena.map[8] = 0;
+            arena.map[9] = 1;
+            arena.map[10] = 1;
+            arena.map[11] = 2 + 64;
+            arena.map[12] = 0;
+            arena.map[13] = 0;
+            arena.map[14] = 1;
+            arena.map[15] = 1;
+            arena.map[16] = 0;
+            arena.map[17] = 7;
+            arena.map[18] = 0;
+            arena.map[19] = 1;
+            arena.map[20] = 1;
+            arena.map[21] = 1;
+            arena.map[22] = 1;
+            arena.map[23] = 1;
+            arena.map[24] = 1;
+            let guapo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let oppo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
+            assert_eq!(x, 2);
+            assert_eq!(y, 2);
+            assert_eq!(order, " HARVESTER".to_string());
+            assert_eq!(direction, " S".to_string());
+        }
+        #[test]
+        fn test_is_harvester_created_at_the_right_place3() {
+            let mut arena = Arena::new(4, 4);
+            arena.map[0] = 10;
+            arena.map[1] = 1;
+            arena.map[2] = 0;
+            arena.map[3] = 0;
+            arena.map[4] = 1;
+            arena.map[5] = 0;
+            arena.map[6] = 0;
+            arena.map[7] = 10;
+            arena.map[8] = 2 + 64;
+            arena.map[9] = 3 + 64;
+            arena.map[10] = 3 + 64;
+            arena.map[11] = 0;
+            arena.map[12] = 0;
+            arena.map[13] = 0;
+            arena.map[14] = 0;
+            arena.map[15] = 0;
+            let guapo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let oppo = Player {
+                a: 1,
+                b: 1,
+                c: 1,
+                d: 1,
+            };
+            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
+            assert_eq!(x, 2);
+            assert_eq!(y, 1);
+            assert_eq!(order, " HARVESTER".to_string());
+            assert_eq!(direction, " E".to_string());
+        }
     }
 }
 pub mod player {
@@ -658,6 +996,25 @@ pub const SOUTH: u32 = 128;
 pub const WEST: u32 = 256;
 pub const EAST: u32 = 256 + 128;
 macro_rules ! parse_input { ( $ x : expr , $ t : ident ) => { $ x . trim ( ) . parse ::<$ t > ( ) . unwrap ( ) } ; }
+fn update_money(guapo: &mut Player, order: String) {
+    if order == " ROOT" {
+        guapo.a -= 1;
+        guapo.b -= 1;
+        guapo.c -= 1;
+        guapo.d -= 1;
+    } else if order == " TENTACLE" {
+        guapo.b -= 1;
+        guapo.c -= 1;
+    } else if order == " BASIC" {
+        guapo.a -= 1;
+    } else if order == " HARVESTER" {
+        guapo.c -= 1;
+        guapo.d -= 1;
+    } else if order == " SPORER" {
+        guapo.b -= 1;
+        guapo.d -= 1;
+    }
+}
 fn main() {
     let mut input_line: String = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
@@ -745,7 +1102,7 @@ fn main() {
         let required_actions_count = parse_input!(input_line, i32);
         for num_id in 0..required_actions_count as u32 {
             let mut output = String::new();
-            let (id, x_new, y_new, order, direction) = arena.next_move(num_id);
+            let (id, x_new, y_new, order, direction) = arena.next_move(num_id, &guapo, &opponent);
             if order == "SPORE " {
                 output.push_str("SPORE ");
                 output.push_str(&direction);
@@ -763,6 +1120,7 @@ fn main() {
                 output.push_str(&order);
                 output.push_str(&direction);
             }
+            update_money(&mut guapo, order);
             println!("{}", output);
         }
     }

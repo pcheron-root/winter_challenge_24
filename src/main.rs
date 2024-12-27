@@ -31,6 +31,25 @@ macro_rules! parse_input {
     };
 }
 
+fn update_money(guapo: &mut Player, order: String) {
+    if order == " ROOT" {
+        guapo.a -= 1;
+        guapo.b -= 1;
+        guapo.c -= 1;
+        guapo.d -= 1;
+    } else if order == " TENTACLE" {
+        guapo.b -= 1;
+        guapo.c -= 1;
+    } else if order == " BASIC" {
+        guapo.a -= 1;
+    } else if order == " HARVESTER" {
+        guapo.c -= 1;
+        guapo.d -= 1;
+    } else if order == " SPORER" {
+        guapo.b -= 1;
+        guapo.d -= 1;
+    }
+}
 fn main() {
     let mut input_line: String = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
@@ -145,6 +164,8 @@ fn main() {
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
+                // guapo.b -= 1;
+                // guapo.d -= 1;
             } else {
                 output.push_str("GROW ");
                 output.push_str(&(id).to_string());
@@ -155,6 +176,7 @@ fn main() {
                 output.push_str(&order);
                 output.push_str(&direction);
             }
+            update_money(&mut guapo, order);
             println!("{}", output);
             // } else {
             //     println!("WAIT");
