@@ -49,7 +49,7 @@ pub mod arena {
                                     {
                                         return (
                                             true,
-                                            x + 1,
+                                            x - 1,
                                             y,
                                             " TENTACLE".to_string(),
                                             " E".to_string(),
@@ -126,7 +126,7 @@ pub mod arena {
                             if map[y * self.nb_col + x - 1] == 1 &&
                                 !self.is_forbidden_move(x - 1, y)
                             {
-                                return (true, x + 1, y, " TENTACLE".to_string(), " E".to_string());
+                                return (true, x - 1, y, " TENTACLE".to_string(), " E".to_string());
                             }
                         }
                         if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
@@ -364,6 +364,7 @@ pub mod arena {
                                 if i == 1 {
                                     map[y * self.nb_col + x] = 2;
                                 } else {
+                                    eprintln!("I build to rush protein");
                                     if guapo.a > 0 {
                                         return (id, x, y, " BASIC".to_string(), "".to_string());
                                     } else if guapo.b > 0 && guapo.c > 0 {
@@ -381,18 +382,34 @@ pub mod arena {
                     }
                 }
             }
-            if guapo.a > 0 {
-                for y in 0..self.nb_lin {
-                    for x in 0..self.nb_col {
-                        if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) &&
-                            !self.is_forbidden_move(x, y)
-                        {
+            eprintln!("I build anything");
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) &&
+                        !self.is_forbidden_move(x, y)
+                    {
+                        if guapo.a > 0 {
                             return (id, x, y, " BASIC".to_string(), "".to_string());
+                        } else if guapo.b > 0 && guapo.c > 0 {
+                            return (id, x, y, " TENTACLE".to_string(), " W".to_string());
                         }
                     }
                 }
             }
-            return (id, 0, 0, " BASIC".to_string(), "".to_string());
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 1 && !self.is_ate(x, y) &&
+                        !self.is_forbidden_move(x, y)
+                    {
+                        if guapo.a > 0 {
+                            return (id, x, y, " BASIC".to_string(), "".to_string());
+                        } else if guapo.b > 0 && guapo.c > 0 {
+                            return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                        }
+                    }
+                }
+            }
+            return (id, 0, 0, " WAIT".to_string(), "".to_string());
         }
         pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
             if y > 0 && is_oppo(self.map[(y - 1) * self.nb_col + x]) {
@@ -1120,8 +1137,12 @@ fn main() {
                 output.push_str(&order);
                 output.push_str(&direction);
             }
-            update_money(&mut guapo, order);
-            println!("{}", output);
+            if order == "WAIT" {
+                println!("WAIT");
+            } else {
+                update_money(&mut guapo, order);
+                println!("{}", output);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 // ! tentacule 3 ont des problemes d'orientation
 //   il faut comprendre pourquoi ca merde et le fix
+// ? est-ce que c'est solve ?
 
 // ! faire une instruction au pif si jamais j'ai rien trouve de mieux a faire
 //   attention, mettre un basic sur une prot est moins bien que de mettre un basic ailleur
@@ -63,7 +64,7 @@ impl Arena {
                                 {
                                     return (
                                         true,
-                                        x + 1,
+                                        x - 1,
                                         y,
                                         " TENTACLE".to_string(),
                                         " E".to_string(),
@@ -104,7 +105,6 @@ impl Arena {
                                 map[y * self.nb_col + x] = 2;
                             }
                         }
-                        //
                         if x + 1 < self.nb_col
                             && map[y * self.nb_col + x + 1] > i + 1
                             && map[y * self.nb_col + x + 1] != 64
@@ -143,7 +143,7 @@ impl Arena {
                     }
                     if x > 0 {
                         if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
-                            return (true, x + 1, y, " TENTACLE".to_string(), " E".to_string());
+                            return (true, x - 1, y, " TENTACLE".to_string(), " E".to_string());
                         }
                     }
                     if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
@@ -368,6 +368,7 @@ impl Arena {
                             if i == 1 {
                                 map[y * self.nb_col + x] = 2;
                             } else {
+                                eprintln!("I build to rush protein");
                                 if guapo.a > 0 {
                                     return (id, x, y, " BASIC".to_string(), "".to_string());
                                 } else if guapo.b > 0 && guapo.c > 0 {
@@ -381,21 +382,39 @@ impl Arena {
         }
         // ici je veux me developper avec uniquement les ressources que j'ai
         // mais dans n'importe quel sens
-        if guapo.a > 0 {
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 1
-                        && !self.is_ate(x, y)
-                        && !self.is_forbidden_move(x, y)
-                    {
+        eprintln!("I build anything");
+        // ici j'evite les prots
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 1
+                    && !self.is_ate(x, y)
+                    && !self.is_forbidden_move(x, y)
+                {
+                    if guapo.a > 0 {
                         return (id, x, y, " BASIC".to_string(), "".to_string());
+                    } else if guapo.b > 0 && guapo.c > 0 {
+                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
                     }
                 }
             }
         }
-        // && !self.is_forbidden_move(x, y)
-        return (id, 0, 0, " BASIC".to_string(), "".to_string());
-        // creer nimporte quoi
+        // ici j'evite pas les prot
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 1
+                    && !self.is_ate(x, y)
+                    && !self.is_forbidden_move(x, y)
+                {
+                    if guapo.a > 0 {
+                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                    } else if guapo.b > 0 && guapo.c > 0 {
+                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                    }
+                }
+            }
+        }
+        // return wait;
+        return (id, 0, 0, " WAIT".to_string(), "".to_string());
     }
 
     pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {

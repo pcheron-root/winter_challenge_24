@@ -176,11 +176,12 @@ fn main() {
                 output.push_str(&order);
                 output.push_str(&direction);
             }
-            update_money(&mut guapo, order);
-            println!("{}", output);
-            // } else {
-            //     println!("WAIT");
-            // }
+            if order == "WAIT" {
+                println!("WAIT");
+            } else {
+                update_money(&mut guapo, order);
+                println!("{}", output);
+            }
         }
     }
 }
