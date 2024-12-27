@@ -414,7 +414,7 @@ impl Arena {
             }
         }
         // return wait;
-        return (id, 0, 0, " WAIT".to_string(), "".to_string());
+        return (id, 0, 0, "WAIT".to_string(), "".to_string());
     }
 
     pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
