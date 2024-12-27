@@ -1,7 +1,5 @@
-// ! construire des trucs a la fin de ma boucle
 // ! ne pas ecraser les prots que je mange
-
-// ! creation de bouche a fix
+//   pour la creation de bouche et pour le rush de proteines
 
 // ! faire les sporer
 //   il faut detechter les endroits loins et proches de 2 des proteines
@@ -362,6 +360,79 @@ impl Arena {
         return self.looking_for_prot(id, guapo, oppo);
     }
 
+    pub fn find_stupid_move(&self, id: u32, guapo: &Player) -> (u32, usize, usize, String, String) {
+        let mut map = vec![4; self.nb_col * self.nb_lin];
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if is_wall(self.map[y * self.nb_col + x]) {
+                    map[y * self.nb_col + x] = 64;
+                } else if is_from_organ(self.map[y * self.nb_col + x], id) {
+                    map[y * self.nb_col + x] = 0;
+                } else if is_mine(self.map[y * self.nb_col + x]) {
+                    map[y * self.nb_col + x] = 64;
+                } else if is_oppo(self.map[y * self.nb_col + x]) {
+                    map[y * self.nb_col + x] = 32;
+                }
+            }
+        }
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 0 {
+                    if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] == 4 {
+                        map[y * self.nb_col + x + 1] =
+                            1 + is_protein(self.map[y * self.nb_col + x + 1]) as u32;
+                    }
+                    if x > 0 && map[y * self.nb_col + x - 1] == 4 {
+                        map[y * self.nb_col + x - 1] =
+                            1 + is_protein(self.map[y * self.nb_col + x - 1]) as u32;
+                    }
+                    if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] == 4 {
+                        map[(y + 1) * self.nb_col + x] =
+                            1 + is_protein(self.map[(y + 1) * self.nb_col + x]) as u32;
+                    }
+                    if y > 0 && map[(y - 1) * self.nb_col + x] == 4 {
+                        map[(y - 1) * self.nb_col + x] =
+                            1 + is_protein(self.map[(y - 1) * self.nb_col + x]) as u32;
+                    }
+                }
+            }
+        }
+        eprint!("map de la lose\n");
+        print_map(map.clone(), self.nb_col, self.nb_lin);
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 1 {
+                    if guapo.a > 0 {
+                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                    } else if guapo.b > 0 && guapo.c > 0 {
+                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                    } else if guapo.b > 0 && guapo.d > 0 {
+                        return (id, x, y, " SPORER".to_string(), " E".to_string());
+                    } else if guapo.c > 0 && guapo.d > 0 {
+                        return (id, x, y, " HARVESTER".to_string(), " E".to_string());
+                    }
+                }
+            }
+        }
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 2 {
+                    if guapo.a > 0 {
+                        return (id, x, y, " BASIC".to_string(), "".to_string());
+                    } else if guapo.b > 0 && guapo.c > 0 {
+                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                    } else if guapo.b > 0 && guapo.d > 0 {
+                        return (id, x, y, " SPORER".to_string(), " E".to_string());
+                    } else if guapo.c > 0 && guapo.d > 0 {
+                        return (id, x, y, " HARVESTER".to_string(), " E".to_string());
+                    }
+                }
+            }
+        }
+
+        return (0, 0, 0, "WAIT".to_string(), "".to_string());
+    }
+
     pub fn looking_for_prot(
         &self,
         id: u32,
@@ -374,8 +445,7 @@ impl Arena {
                 if is_wall(self.map[y * self.nb_col + x]) {
                     map[y * self.nb_col + x] = 64;
                 }
-                if is_mine(self.map[y * self.nb_col + x]) {
-                    // from my actual organ
+                if is_from_organ(self.map[y * self.nb_col + x], id) {
                     map[y * self.nb_col + x] = 0;
                 }
             }
@@ -393,6 +463,7 @@ impl Arena {
                                 if i == 1
                                     && is_protein(self.map[y * self.nb_col + x + 1])
                                     && !self.is_ate(x + 1, y)
+                                    // && !self.is_ate(x, y)
                                     && !self.is_forbidden_move(x, y)
                                 {
                                     return (
@@ -482,72 +553,7 @@ impl Arena {
                 }
             }
         }
-        // ici je veux me developper avec uniquement les ressources que j'ai
-        // mais dans n'importe quel sens
-        eprintln!("I build anything");
-        // ici j'evite les prots
-        for y in 0..self.nb_lin {
-            for x in 0..self.nb_col {
-                if map[y * self.nb_col + x] == 1
-                    && !self.is_ate(x, y)
-                    && !self.is_forbidden_move(x, y)
-                {
-                    if guapo.a > 0 {
-                        return (
-                            self.find_my_id(x, y, id),
-                            x,
-                            y,
-                            " BASIC".to_string(),
-                            "".to_string(),
-                        );
-                    } else if guapo.b > 0 && guapo.c > 0 {
-                        return (
-                            self.find_my_id(x, y, id),
-                            x,
-                            y,
-                            " TENTACLE".to_string(),
-                            " W".to_string(),
-                        );
-                    }
-                }
-            }
-        }
-        // ici j'evite pas les prot
-        for y in 0..self.nb_lin {
-            for x in 0..self.nb_col {
-                if map[y * self.nb_col + x] == 1
-                    && !self.is_ate(x, y)
-                    && !self.is_forbidden_move(x, y)
-                {
-                    if guapo.a > 0 {
-                        return (
-                            self.find_my_id(x, y, id),
-                            x,
-                            y,
-                            " BASIC".to_string(),
-                            "".to_string(),
-                        );
-                    } else if guapo.b > 0 && guapo.d > 0 {
-                        return (
-                            self.find_my_id(x, y, id),
-                            x,
-                            y,
-                            " SPORER".to_string(),
-                            "".to_string(),
-                        );
-                    } else if guapo.b > 0 && guapo.c > 0 {
-                        return (
-                            self.find_my_id(x, y, id),
-                            x,
-                            y,
-                            " TENTACLE".to_string(),
-                            " W".to_string(),
-                        );
-                    }
-                }
-            }
-        }
-        return (0, 0, 0, "WAIT".to_string(), "".to_string());
+        return self.find_stupid_move(id, guapo);
     }
 
     pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
