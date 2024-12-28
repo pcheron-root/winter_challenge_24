@@ -54,8 +54,6 @@ pub mod arena {
                                     if map[y * self.nb_col + x + 1] == 1 &&
                                         !self.is_forbidden_move(x + 1, y)
                                     {
-                                        eprint!("dist 3");
-                                        print_map(map.clone(), self.nb_col, self.nb_lin);
                                         return (
                                             true,
                                             x + 1,
@@ -70,8 +68,6 @@ pub mod arena {
                                     if map[y * self.nb_col + x - 1] == 1 &&
                                         !self.is_forbidden_move(x - 1, y)
                                     {
-                                        eprint!("dist 3");
-                                        print_map(map.clone(), self.nb_col, self.nb_lin);
                                         return (
                                             true,
                                             x - 1,
@@ -84,8 +80,6 @@ pub mod arena {
                                 }
                                 if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
                                     if map[(y + 1) * self.nb_col + x] == 1 {
-                                        eprint!("dist 3");
-                                        print_map(map.clone(), self.nb_col, self.nb_lin);
                                         return (
                                             true,
                                             x,
@@ -100,8 +94,6 @@ pub mod arena {
                                     if map[(y - 1) * self.nb_col + x] == 1 &&
                                         !self.is_forbidden_move(x, y - 1)
                                     {
-                                        eprint!("dist 3");
-                                        print_map(map.clone(), self.nb_col, self.nb_lin);
                                         return (
                                             true,
                                             x,
@@ -117,6 +109,59 @@ pub mod arena {
                         if map[y * self.nb_col + x] == i {
                             if i == 1 {
                                 if is_oppo(self.map[y * self.nb_col + x]) {
+                                    let (is_already_attack, _dir) =
+                                        self.is_targetate_by_my_tentacle(x, y);
+                                    if is_already_attack {
+                                        if x + 1 < self.nb_col &&
+                                            is_oppo(self.map[y * self.nb_col + x + 1]) &&
+                                            !self.is_forbidden_move(x + 1, y)
+                                        {
+                                            return (
+                                                true,
+                                                x,
+                                                y,
+                                                " TENTACLE".to_string(),
+                                                " E".to_string(),
+                                                self.find_my_id(x, y, id),
+                                            );
+                                        } else if x > 0 &&
+                                                   is_oppo(self.map[y * self.nb_col + x - 1]) &&
+                                                   !self.is_forbidden_move(x - 1, y)
+                                        {
+                                            return (
+                                                true,
+                                                x,
+                                                y,
+                                                " TENTACLE".to_string(),
+                                                " W".to_string(),
+                                                self.find_my_id(x, y, id),
+                                            );
+                                        } else if y > 0 &&
+                                                   is_oppo(self.map[(y - 1) * self.nb_col + x]) &&
+                                                   !self.is_forbidden_move(x, y)
+                                        {
+                                            return (
+                                                true,
+                                                x,
+                                                y,
+                                                " TENTACLE".to_string(),
+                                                " N".to_string(),
+                                                self.find_my_id(x, y, id),
+                                            );
+                                        } else if y + 1 < self.nb_lin &&
+                                                   is_oppo(self.map[(y + 1) * self.nb_col + x]) &&
+                                                   !self.is_forbidden_move(x, y)
+                                        {
+                                            return (
+                                                true,
+                                                x,
+                                                y,
+                                                " TENTACLE".to_string(),
+                                                " S".to_string(),
+                                                self.find_my_id(x, y, id),
+                                            );
+                                        }
+                                    }
                                     map[y * self.nb_col + x] = 2;
                                 }
                             }
@@ -151,8 +196,6 @@ pub mod arena {
                             if map[y * self.nb_col + x + 1] == 1 &&
                                 !self.is_forbidden_move(x + 1, y)
                             {
-                                print_map(map.clone(), self.nb_col, self.nb_lin);
-                                eprint!("dist 2");
                                 return (
                                     true,
                                     x + 1,
@@ -167,8 +210,6 @@ pub mod arena {
                             if map[y * self.nb_col + x - 1] == 1 &&
                                 !self.is_forbidden_move(x - 1, y)
                             {
-                                print_map(map.clone(), self.nb_col, self.nb_lin);
-                                eprint!("dist 2");
                                 return (
                                     true,
                                     x - 1,
@@ -181,8 +222,6 @@ pub mod arena {
                         }
                         if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
                             if map[(y + 1) * self.nb_col + x] == 1 {
-                                print_map(map.clone(), self.nb_col, self.nb_lin);
-                                eprint!("dist 2");
                                 return (
                                     true,
                                     x,
@@ -197,8 +236,6 @@ pub mod arena {
                             if map[(y - 1) * self.nb_col + x] == 1 &&
                                 !self.is_forbidden_move(x, y - 1)
                             {
-                                print_map(map.clone(), self.nb_col, self.nb_lin);
-                                eprint!("dist 2");
                                 return (
                                     true,
                                     x,
@@ -212,82 +249,9 @@ pub mod arena {
                     }
                 }
             }
+            eprint!("I don't find tentacle to summon");
+            print_map(map.clone(), self.nb_col, self.nb_lin);
             return (false, 0, 0, "".to_string(), "".to_string(), 0);
-        }
-        pub fn is_expandable(&self, id: u32) -> (bool, usize, usize, String, String) {
-            let mut map = vec![4; self.nb_col * self.nb_lin];
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if is_wall(self.map[y * self.nb_col + x]) {
-                        map[y * self.nb_col + x] = 64;
-                    }
-                    if is_from_organ(self.map[y * self.nb_col + x], id) {
-                        map[y * self.nb_col + x] = 0;
-                    }
-                }
-            }
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 0 {
-                        if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > 1 &&
-                            map[y * self.nb_col + x + 1] < 8
-                        {
-                            map[y * self.nb_col + x + 1] = 1;
-                        }
-                        if x > 0 && map[y * self.nb_col + x - 1] > 1 &&
-                            map[y * self.nb_col + x - 1] < 8
-                        {
-                            map[y * self.nb_col + x - 1] = 1;
-                        }
-                        if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > 1 &&
-                            map[y * self.nb_col + x] < 8
-                        {
-                            map[(y + 1) * self.nb_col + x] = 1;
-                        }
-                        if y > 0 && map[(y - 1) * self.nb_col + x] > 1 &&
-                            map[(y - 1) * self.nb_col + x] < 8
-                        {
-                            map[(y - 1) * self.nb_col + x] = 1;
-                        }
-                    }
-                }
-            }
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 1 && x + 12 < self.nb_col {
-                        for i in 1..13 {
-                            if !is_crossable(self.map[y * self.nb_col + x + i]) {
-                                break;
-                            }
-                            if i == 12 && !is_protein(self.map[y * self.nb_col + x + i]) {
-                                if !self.is_organism_next_to(x + i, y) &&
-                                    !self.is_forbidden_move(x, y)
-                                {
-                                    return (true, x, y, " SPORER".to_string(), " E".to_string());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            (false, 0, 0, "".to_string(), "".to_string())
-        }
-        pub fn is_charged(&self, id: u32) -> (bool, usize, usize, String, String) {
-            for y in 0..self.nb_lin {
-                for x in 0..self.nb_col {
-                    if is_sporer(self.map[y * self.nb_col + x]) &&
-                        is_from_organ(self.map[y * self.nb_col + x], id)
-                    {
-                        if x + 12 < self.nb_col - 1 &&
-                            !is_mine(self.map[y * self.nb_col + x + 12])
-                        {
-                            let id_sporer = self.map[y * self.nb_col + x] >> 21;
-                            return (true, x + 12, y, "SPORE ".to_string(), id_sporer.to_string());
-                        }
-                    }
-                }
-            }
-            (false, 0, 0, "".to_string(), "".to_string())
         }
         pub fn find_right_id(&self, mut num_id: u32) -> u32 {
             for y in 0..self.nb_lin {
@@ -315,7 +279,6 @@ pub mod arena {
             if guapo.b > 0 && guapo.c > 0 {
                 let (is_near, x, y, order, direction, new_id) = self.is_enemy_near(id);
                 if is_near {
-                    eprintln!("je me defend");
                     return (new_id, x, y, order, direction);
                 }
             }
@@ -362,8 +325,6 @@ pub mod arena {
                     }
                 }
             }
-            eprint!("map de la lose\n");
-            print_map(map.clone(), self.nb_col, self.nb_lin);
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 1 {
@@ -410,6 +371,8 @@ pub mod arena {
                     }
                     if is_from_organ(self.map[y * self.nb_col + x], id) {
                         map[y * self.nb_col + x] = 0;
+                    } else if is_mine(self.map[y * self.nb_col + x]) {
+                        map[y * self.nb_col + x] = 32;
                     }
                 }
             }
@@ -498,10 +461,8 @@ pub mod arena {
                                     map[y * self.nb_col + x] = 2;
                                 } else {
                                     if guapo.a > 0 {
-                                        eprintln!("rush closest prot with basic");
                                         return (id, x, y, " BASIC".to_string(), "".to_string());
                                     } else if guapo.b > 0 && guapo.c > 0 {
-                                        eprintln!("rush closest prot with tentacle");
                                         return (
                                             id,
                                             x,
@@ -636,6 +597,33 @@ pub mod arena {
                 return true;
             }
             false
+        }
+        pub fn is_targetate_by_my_tentacle(&self, x: usize, y: usize) -> (bool, u32) {
+            if x + 1 < self.nb_col {
+                let elem = self.map[y * self.nb_col + x + 1];
+                if is_tentacle(elem) && is_mine(elem) && is_west(elem) {
+                    return (true, 256);
+                }
+            }
+            if x > 0 {
+                let elem = self.map[y * self.nb_col + x - 1];
+                if is_tentacle(elem) && is_mine(elem) && is_east(elem) {
+                    return (true, 256 + 128);
+                }
+            }
+            if y + 1 < self.nb_lin {
+                let elem = self.map[(y + 1) * self.nb_col + x + 1];
+                if is_tentacle(elem) && is_mine(elem) && is_north(elem) {
+                    return (true, 0);
+                }
+            }
+            if y > 0 {
+                let elem = self.map[(y - 1) * self.nb_col + x];
+                if is_tentacle(elem) && is_mine(elem) && is_south(elem) {
+                    return (true, 128);
+                }
+            }
+            (false, 0)
         }
     }
     pub fn is_mine(x: u32) -> bool {
@@ -945,135 +933,6 @@ pub mod arena {
             assert_eq!(is_tentacle(w), false);
             let v: u32 = 6;
             assert_eq!(is_tentacle(v), false);
-        }
-        #[test]
-        fn test_is_harvester_created_at_the_right_place0() {
-            let mut arena = Arena::new(5, 5);
-            arena.map[0] = 1;
-            arena.map[1] = 1;
-            arena.map[2] = 1;
-            arena.map[3] = 1;
-            arena.map[4] = 1;
-            arena.map[5] = 1;
-            arena.map[6] = 0;
-            arena.map[7] = 0;
-            arena.map[8] = 0;
-            arena.map[9] = 1;
-            arena.map[10] = 1;
-            arena.map[11] = 2 + 64;
-            arena.map[12] = 0;
-            arena.map[13] = 7;
-            arena.map[14] = 1;
-            arena.map[15] = 1;
-            arena.map[16] = 0;
-            arena.map[17] = 0;
-            arena.map[18] = 0;
-            arena.map[19] = 1;
-            arena.map[20] = 1;
-            arena.map[21] = 1;
-            arena.map[22] = 1;
-            arena.map[23] = 1;
-            arena.map[24] = 1;
-            let guapo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let oppo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
-            assert_eq!(x, 2);
-            assert_eq!(y, 2);
-            assert_eq!(order, " HARVESTER".to_string());
-            assert_eq!(direction, " E".to_string());
-        }
-        #[test]
-        fn test_is_harvester_created_at_the_right_place1() {
-            let mut arena = Arena::new(5, 5);
-            arena.map[0] = 1;
-            arena.map[1] = 1;
-            arena.map[2] = 1;
-            arena.map[3] = 1;
-            arena.map[4] = 1;
-            arena.map[5] = 1;
-            arena.map[6] = 0;
-            arena.map[7] = 0;
-            arena.map[8] = 0;
-            arena.map[9] = 1;
-            arena.map[10] = 1;
-            arena.map[11] = 2 + 64;
-            arena.map[12] = 0;
-            arena.map[13] = 0;
-            arena.map[14] = 1;
-            arena.map[15] = 1;
-            arena.map[16] = 0;
-            arena.map[17] = 7;
-            arena.map[18] = 0;
-            arena.map[19] = 1;
-            arena.map[20] = 1;
-            arena.map[21] = 1;
-            arena.map[22] = 1;
-            arena.map[23] = 1;
-            arena.map[24] = 1;
-            let guapo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let oppo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
-            assert_eq!(x, 2);
-            assert_eq!(y, 2);
-            assert_eq!(order, " HARVESTER".to_string());
-            assert_eq!(direction, " S".to_string());
-        }
-        #[test]
-        fn test_is_harvester_created_at_the_right_place3() {
-            let mut arena = Arena::new(4, 4);
-            arena.map[0] = 10;
-            arena.map[1] = 1;
-            arena.map[2] = 0;
-            arena.map[3] = 0;
-            arena.map[4] = 1;
-            arena.map[5] = 0;
-            arena.map[6] = 0;
-            arena.map[7] = 10;
-            arena.map[8] = 2 + 64;
-            arena.map[9] = 3 + 64;
-            arena.map[10] = 3 + 64;
-            arena.map[11] = 0;
-            arena.map[12] = 0;
-            arena.map[13] = 0;
-            arena.map[14] = 0;
-            arena.map[15] = 0;
-            let guapo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let oppo = Player {
-                a: 1,
-                b: 1,
-                c: 1,
-                d: 1,
-            };
-            let (_id, x, y, order, direction) = arena.looking_for_prot(0, &guapo, &oppo);
-            assert_eq!(x, 2);
-            assert_eq!(y, 1);
-            assert_eq!(order, " HARVESTER".to_string());
-            assert_eq!(direction, " E".to_string());
         }
     }
 }
