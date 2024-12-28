@@ -408,7 +408,7 @@ pub mod arena {
                     if is_wall(self.map[y * self.nb_col + x]) {
                         map[y * self.nb_col + x] = 64;
                     }
-                    if is_mine(self.map[y * self.nb_col + x]) {
+                    if is_from_organ(self.map[y * self.nb_col + x], id) {
                         map[y * self.nb_col + x] = 0;
                     }
                 }
@@ -424,6 +424,7 @@ pub mod arena {
                                     map[y * self.nb_col + x + 1] = i + 1;
                                     if i == 1 && is_protein(self.map[y * self.nb_col + x + 1]) &&
                                         !self.is_ate(x + 1, y) &&
+                                        !self.is_ate(x, y) &&
                                         !self.is_forbidden_move(x, y)
                                     {
                                         return (
@@ -441,6 +442,7 @@ pub mod arena {
                                     map[y * self.nb_col + x - 1] = i + 1;
                                     if i == 1 && is_protein(self.map[y * self.nb_col + x - 1]) &&
                                         !self.is_ate(x - 1, y) &&
+                                        !self.is_ate(x, y) &&
                                         !self.is_forbidden_move(x, y)
                                     {
                                         return (
@@ -458,6 +460,7 @@ pub mod arena {
                                     map[(y + 1) * self.nb_col + x] = i + 1;
                                     if i == 1 && is_protein(self.map[(y + 1) * self.nb_col + x]) &&
                                         !self.is_ate(x, y + 1) &&
+                                        !self.is_ate(x, y) &&
                                         !self.is_forbidden_move(x, y)
                                     {
                                         return (
@@ -475,6 +478,7 @@ pub mod arena {
                                     map[(y - 1) * self.nb_col + x] = i + 1;
                                     if i == 1 && is_protein(self.map[(y - 1) * self.nb_col + x]) &&
                                         !self.is_ate(x, y - 1) &&
+                                        !self.is_ate(x, y) &&
                                         !self.is_forbidden_move(x, y)
                                     {
                                         return (
