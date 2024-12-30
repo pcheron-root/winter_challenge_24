@@ -32,6 +32,6 @@ impl Player {
         } else if self.c > 0 && self.d > 0 {
             return (" HARVESTER".to_string(), " E".to_string());
         }
-        (" WAIT".to_string(), "".to_string())
+        ("WAIT".to_string(), "".to_string())
     }
 }

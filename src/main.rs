@@ -169,7 +169,7 @@ fn main() {
                 output.push_str(&y_new.to_string());
                 // guapo.b -= 1;
                 // guapo.d -= 1;
-            } else {
+            } else if order != "WAIT" {
                 output.push_str("GROW ");
                 output.push_str(&(id).to_string());
                 output.push_str(" ");
