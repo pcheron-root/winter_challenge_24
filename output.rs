@@ -14,24 +14,20 @@ pub mod arena {
             }
         }
         pub fn find_my_id(&self, x: usize, y: usize, origin: u32) -> u32 {
-            if x + 1 < self.nb_col
-                && is_mine(self.map[y * self.nb_col + x + 1])
-                && self.map[y * self.nb_col + x + 1] << 11 >> 21 == origin
+            if x + 1 < self.nb_col && is_mine(self.map[y * self.nb_col + x + 1]) &&
+                self.map[y * self.nb_col + x + 1] << 11 >> 21 == origin
             {
                 return self.map[y * self.nb_col + x + 1] >> 21;
-            } else if x > 0
-                && is_mine(self.map[y * self.nb_col + x - 1])
-                && self.map[y * self.nb_col + x - 1] << 11 >> 21 == origin
+            } else if x > 0 && is_mine(self.map[y * self.nb_col + x - 1]) &&
+                       self.map[y * self.nb_col + x - 1] << 11 >> 21 == origin
             {
                 return self.map[y * self.nb_col + x - 1] >> 21;
-            } else if y + 1 < self.nb_lin
-                && is_mine(self.map[(y + 1) * self.nb_col + x])
-                && self.map[(y + 1) * self.nb_col + x] << 11 >> 21 == origin
+            } else if y + 1 < self.nb_lin && is_mine(self.map[(y + 1) * self.nb_col + x]) &&
+                       self.map[(y + 1) * self.nb_col + x] << 11 >> 21 == origin
             {
                 return self.map[(y + 1) * self.nb_col + x] >> 21;
-            } else if y > 0
-                && is_mine(self.map[(y - 1) * self.nb_col + x])
-                && self.map[(y - 1) * self.nb_col + x] << 11 >> 21 == origin
+            } else if y > 0 && is_mine(self.map[(y - 1) * self.nb_col + x]) &&
+                       self.map[(y - 1) * self.nb_col + x] << 11 >> 21 == origin
             {
                 return self.map[(y - 1) * self.nb_col + x] >> 21;
             }
@@ -53,27 +49,23 @@ pub mod arena {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
                         if map[y * self.nb_col + x] == i {
-                            if x + 1 < self.nb_col
-                                && map[y * self.nb_col + x + 1] > i + 1
-                                && map[y * self.nb_col + x + 1] != 64
+                            if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
+                                map[y * self.nb_col + x + 1] != 64
                             {
                                 map[y * self.nb_col + x + 1] = i + 1;
                             }
-                            if x >= 1
-                                && map[y * self.nb_col + x - 1] > i + 1
-                                && map[y * self.nb_col + x - 1] != 64
+                            if x >= 1 && map[y * self.nb_col + x - 1] > i + 1 &&
+                                map[y * self.nb_col + x - 1] != 64
                             {
                                 map[y * self.nb_col + x - 1] = i + 1;
                             }
-                            if y + 1 < self.nb_lin
-                                && map[(y + 1) * self.nb_col + x] > i + 1
-                                && map[(y + 1) * self.nb_col + x] != 64
+                            if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
+                                map[(y + 1) * self.nb_col + x] != 64
                             {
                                 map[(y + 1) * self.nb_col + x] = i + 1;
                             }
-                            if y >= 1
-                                && map[(y - 1) * self.nb_col + x] > i + 1
-                                && map[(y - 1) * self.nb_col + x] != 64
+                            if y >= 1 && map[(y - 1) * self.nb_col + x] > i + 1 &&
+                                map[(y - 1) * self.nb_col + x] != 64
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
                             }
@@ -87,11 +79,11 @@ pub mod arena {
                         if is_oppo(self.map[y * self.nb_col + x]) {
                             let (is_already_attack, _dir) = self.is_targetate_by_my_tentacle(x, y);
                             if is_already_attack {
-                                if x + 1 < self.nb_col
-                                    && is_oppo(self.map[y * self.nb_col + x + 1])
-                                    && !self.is_forbidden_move(x, y)
+                                if x + 1 < self.nb_col &&
+                                    is_oppo(self.map[y * self.nb_col + x + 1]) &&
+                                    !self.is_forbidden_move(x, y)
                                 {
-                                    eprintln!("close combat");
+                                    eprintln!("close combat dir {}", _dir);
                                     return (
                                         true,
                                         x,
@@ -100,11 +92,10 @@ pub mod arena {
                                         " E".to_string(),
                                         self.find_my_id(x, y, id),
                                     );
-                                } else if x > 0
-                                    && is_oppo(self.map[y * self.nb_col + x - 1])
-                                    && !self.is_forbidden_move(x, y)
+                                } else if x > 0 && is_oppo(self.map[y * self.nb_col + x - 1]) &&
+                                           !self.is_forbidden_move(x, y)
                                 {
-                                    eprintln!("close combat");
+                                    eprintln!("close combat dir {}", _dir);
                                     return (
                                         true,
                                         x,
@@ -113,11 +104,10 @@ pub mod arena {
                                         " W".to_string(),
                                         self.find_my_id(x, y, id),
                                     );
-                                } else if y > 0
-                                    && is_oppo(self.map[(y - 1) * self.nb_col + x])
-                                    && !self.is_forbidden_move(x, y)
+                                } else if y > 0 && is_oppo(self.map[(y - 1) * self.nb_col + x]) &&
+                                           !self.is_forbidden_move(x, y)
                                 {
-                                    eprintln!("close combat");
+                                    eprintln!("close combat dir {}", _dir);
                                     return (
                                         true,
                                         x,
@@ -126,11 +116,11 @@ pub mod arena {
                                         " N".to_string(),
                                         self.find_my_id(x, y, id),
                                     );
-                                } else if y + 1 < self.nb_lin
-                                    && is_oppo(self.map[(y + 1) * self.nb_col + x])
-                                    && !self.is_forbidden_move(x, y)
+                                } else if y + 1 < self.nb_lin &&
+                                           is_oppo(self.map[(y + 1) * self.nb_col + x]) &&
+                                           !self.is_forbidden_move(x, y)
                                 {
-                                    eprintln!("close combat");
+                                    eprintln!("close combat dir {}", _dir);
                                     return (
                                         true,
                                         x,
@@ -151,8 +141,8 @@ pub mod arena {
                     if map[y * self.nb_col + x] == 2 {
                         if is_oppo(self.map[y * self.nb_col + x]) {
                             if x + 1 < self.nb_col {
-                                if map[y * self.nb_col + x + 1] == 1
-                                    && !self.is_forbidden_move(x + 1, y)
+                                if map[y * self.nb_col + x + 1] == 1 &&
+                                    !self.is_forbidden_move(x + 1, y)
                                 {
                                     eprintln!("combat 2");
                                     return (
@@ -166,8 +156,8 @@ pub mod arena {
                                 }
                             }
                             if x > 0 {
-                                if map[y * self.nb_col + x - 1] == 1
-                                    && !self.is_forbidden_move(x - 1, y)
+                                if map[y * self.nb_col + x - 1] == 1 &&
+                                    !self.is_forbidden_move(x - 1, y)
                                 {
                                     eprintln!("combat 2");
                                     return (
@@ -194,8 +184,8 @@ pub mod arena {
                                 }
                             }
                             if y > 0 {
-                                if map[(y - 1) * self.nb_col + x] == 1
-                                    && !self.is_forbidden_move(x, y - 1)
+                                if map[(y - 1) * self.nb_col + x] == 1 &&
+                                    !self.is_forbidden_move(x, y - 1)
                                 {
                                     eprintln!("combat 2");
                                     return (
@@ -216,8 +206,8 @@ pub mod arena {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 2 && self.is_enemy_next_to(x, y) {
                         if x + 1 < self.nb_col {
-                            if map[y * self.nb_col + x + 1] == 1
-                                && !self.is_forbidden_move(x + 1, y)
+                            if map[y * self.nb_col + x + 1] == 1 &&
+                                !self.is_forbidden_move(x + 1, y)
                             {
                                 eprintln!("combat 3");
                                 return (
@@ -231,8 +221,8 @@ pub mod arena {
                             }
                         }
                         if x > 0 {
-                            if map[y * self.nb_col + x - 1] == 1
-                                && !self.is_forbidden_move(x - 1, y)
+                            if map[y * self.nb_col + x - 1] == 1 &&
+                                !self.is_forbidden_move(x - 1, y)
                             {
                                 eprintln!("combat 3");
                                 return (
@@ -259,8 +249,8 @@ pub mod arena {
                             }
                         }
                         if y > 0 {
-                            if map[(y - 1) * self.nb_col + x] == 1
-                                && !self.is_forbidden_move(x, y - 1)
+                            if map[(y - 1) * self.nb_col + x] == 1 &&
+                                !self.is_forbidden_move(x, y - 1)
                             {
                                 eprintln!("combat 3");
                                 return (
@@ -281,8 +271,8 @@ pub mod arena {
         pub fn find_right_id(&self, mut num_id: u32) -> u32 {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
-                    if is_root(self.map[y * self.nb_col + x])
-                        && is_mine(self.map[y * self.nb_col + x])
+                    if is_root(self.map[y * self.nb_col + x]) &&
+                        is_mine(self.map[y * self.nb_col + x])
                     {
                         if num_id > 0 {
                             num_id -= 1;
@@ -333,37 +323,39 @@ pub mod arena {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 0 {
                         if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] == 4 {
-                            map[y * self.nb_col + x + 1] =
-                                1 + is_protein(self.map[y * self.nb_col + x + 1]) as u32;
+                            map[y * self.nb_col + x + 1] = 1 +
+                                is_protein(self.map[y * self.nb_col + x + 1]) as u32;
                         }
                         if x > 0 && map[y * self.nb_col + x - 1] == 4 {
-                            map[y * self.nb_col + x - 1] =
-                                1 + is_protein(self.map[y * self.nb_col + x - 1]) as u32;
+                            map[y * self.nb_col + x - 1] = 1 +
+                                is_protein(self.map[y * self.nb_col + x - 1]) as u32;
                         }
                         if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] == 4 {
-                            map[(y + 1) * self.nb_col + x] =
-                                1 + is_protein(self.map[(y + 1) * self.nb_col + x]) as u32;
+                            map[(y + 1) * self.nb_col + x] = 1 +
+                                is_protein(self.map[(y + 1) * self.nb_col + x]) as u32;
                         }
                         if y > 0 && map[(y - 1) * self.nb_col + x] == 4 {
-                            map[(y - 1) * self.nb_col + x] =
-                                1 + is_protein(self.map[(y - 1) * self.nb_col + x]) as u32;
+                            map[(y - 1) * self.nb_col + x] = 1 +
+                                is_protein(self.map[(y - 1) * self.nb_col + x]) as u32;
                         }
                     }
                 }
             }
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 1 {
+                    if map[y * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y) {
                         let (order, dir) = guapo.find_right_cel();
-                        return (id, x, y, order, dir);
+                        let new_id = self.find_my_id(x, y, id);
+                        return (new_id, x, y, order, dir);
                     }
                 }
             }
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
-                    if map[y * self.nb_col + x] == 2 {
+                    if map[y * self.nb_col + x] == 2 && !self.is_forbidden_move(x, y) {
                         let (order, dir) = guapo.find_right_cel();
-                        return (id, x, y, order, dir);
+                        let new_id = self.find_my_id(x, y, id);
+                        return (new_id, x, y, order, dir);
                     }
                 }
             }
@@ -377,36 +369,32 @@ pub mod arena {
             nb: u32,
         ) -> (bool, u32, usize, usize, u32) {
             if nb > 1 {
-                if x + 1 < self.nb_col
-                    && map[y * self.nb_col + x + 1] == nb - 1
-                    && !is_protein(self.map[y * self.nb_col + x + 1])
-                    && !self.is_forbidden_move(x + 1, y)
+                if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] == nb - 1 &&
+                    !is_protein(self.map[y * self.nb_col + x + 1]) &&
+                    !self.is_forbidden_move(x + 1, y)
                 {
                     return (true, nb - 1, x + 1, y, 256);
                 }
-                if x > 0
-                    && map[y * self.nb_col + x - 1] == nb - 1
-                    && !is_protein(self.map[y * self.nb_col + x - 1])
-                    && !self.is_forbidden_move(x - 1, y)
+                if x > 0 && map[y * self.nb_col + x - 1] == nb - 1 &&
+                    !is_protein(self.map[y * self.nb_col + x - 1]) &&
+                    !self.is_forbidden_move(x - 1, y)
                 {
                     return (true, nb - 1, x - 1, y, 256 + 128);
                 }
-                if y + 1 < self.nb_lin
-                    && map[(y + 1) * self.nb_col + x] == nb - 1
-                    && !is_protein(self.map[(y + 1) * self.nb_col + x])
-                    && !self.is_forbidden_move(x, y + 1)
+                if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] == nb - 1 &&
+                    !is_protein(self.map[(y + 1) * self.nb_col + x]) &&
+                    !self.is_forbidden_move(x, y + 1)
                 {
                     return (true, nb - 1, x, y + 1, 0);
                 }
-                if y > 0
-                    && map[(y - 1) * self.nb_col + x] == nb - 1
-                    && !is_protein(self.map[(y - 1) * self.nb_col + x])
-                    && !self.is_forbidden_move(x, y - 1)
+                if y > 0 && map[(y - 1) * self.nb_col + x] == nb - 1 &&
+                    !is_protein(self.map[(y - 1) * self.nb_col + x]) &&
+                    !self.is_forbidden_move(x, y - 1)
                 {
                     return (true, nb - 1, x, y - 1, 128);
                 }
             }
-            return (false, 0, 0, 0, 0);
+            return (false, nb, x, y, 0);
         }
         pub fn looking_for_prot(
             &self,
@@ -422,8 +410,8 @@ pub mod arena {
                     }
                     if is_from_organ(self.map[y * self.nb_col + x], id) {
                         map[y * self.nb_col + x] = 0;
-                    } else if is_mine(self.map[y * self.nb_col + x])
-                        || is_oppo(self.map[y * self.nb_col + x])
+                    } else if is_mine(self.map[y * self.nb_col + x]) ||
+                               is_oppo(self.map[y * self.nb_col + x])
                     {
                         map[y * self.nb_col + x] = 32;
                     }
@@ -434,27 +422,23 @@ pub mod arena {
                     for x in 0..self.nb_col {
                         if map[y * self.nb_col + x] == i {
                             if guapo.c > 0 && guapo.d > 0 {
-                                if x + 1 < self.nb_col
-                                    && map[y * self.nb_col + x + 1] > i + 1
-                                    && map[y * self.nb_col + x + 1] < 32
+                                if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > i + 1 &&
+                                    map[y * self.nb_col + x + 1] < 32
                                 {
                                     map[y * self.nb_col + x + 1] = i + 1;
                                 }
-                                if x > 0
-                                    && map[y * self.nb_col + x - 1] > i + 1
-                                    && map[y * self.nb_col + x - 1] < 32
+                                if x > 0 && map[y * self.nb_col + x - 1] > i + 1 &&
+                                    map[y * self.nb_col + x - 1] < 32
                                 {
                                     map[y * self.nb_col + x - 1] = i + 1;
                                 }
-                                if y + 1 < self.nb_lin
-                                    && map[(y + 1) * self.nb_col + x] > i + 1
-                                    && map[(y + 1) * self.nb_col + x] < 32
+                                if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > i + 1 &&
+                                    map[(y + 1) * self.nb_col + x] < 32
                                 {
                                     map[(y + 1) * self.nb_col + x] = i + 1;
                                 }
-                                if y > 0
-                                    && map[(y - 1) * self.nb_col + x] > i + 1
-                                    && map[(y - 1) * self.nb_col + x] < 32
+                                if y > 0 && map[(y - 1) * self.nb_col + x] > i + 1 &&
+                                    map[(y - 1) * self.nb_col + x] < 32
                                 {
                                     map[(y - 1) * self.nb_col + x] = i + 1;
                                 }
@@ -463,24 +447,53 @@ pub mod arena {
                     }
                 }
             }
-            print_map(map.clone(), self.nb_col, self.nb_lin);
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 1 && is_protein(self.map[y * self.nb_col + x]) {
+                        if self.is_ate(x, y) {
+                            map[y * self.nb_col + x] = 32;
+                        } else {
+                            map[y * self.nb_col + x] = 3;
+                        }
+                    }
+                }
+            }
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if map[y * self.nb_col + x] == 1 {
+                        if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] > 2 &&
+                            map[y * self.nb_col + x + 1] < 32
+                        {
+                            map[y * self.nb_col + x + 1] = 2;
+                        }
+                        if x > 0 && map[y * self.nb_col + x - 1] > 2 &&
+                            map[y * self.nb_col + x - 1] < 32
+                        {
+                            map[y * self.nb_col + x - 1] = 2;
+                        }
+                        if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] > 2 &&
+                            map[(y + 1) * self.nb_col + x] < 32
+                        {
+                            map[(y + 1) * self.nb_col + x] = 2;
+                        }
+                        if y > 0 && map[(y - 1) * self.nb_col + x] > 2 &&
+                            map[(y - 1) * self.nb_col + x] < 32
+                        {
+                            map[(y - 1) * self.nb_col + x] = 2;
+                        }
+                    }
+                }
+            }
             for i in 0..10 {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
                         if is_protein(self.map[y * self.nb_col + x]) {
                             if map[y * self.nb_col + x] == i {
-                                if i == 1 && is_protein(self.map[y * self.nb_col + x]) {
-                                    if self.is_ate(x, y) {
-                                        map[y * self.nb_col + x] = 32;
-                                    } else {
-                                        map[y * self.nb_col + x] = 2;
-                                    }
-                                } else if i == 2
-                                    && is_protein(self.map[y * self.nb_col + x])
-                                    && !self.is_ate(x, y)
-                                    && guapo.a > 0
-                                    && guapo.c > 0
+                                if i == 2 && is_protein(self.map[y * self.nb_col + x]) &&
+                                    !self.is_ate(x, y) &&
+                                    guapo.a > 0 && guapo.c > 0
                                 {
+                                    eprintln!("appel 1\n");
                                     let (continue_, _nb, new_x, new_y, dir) =
                                         self.come_back(&map, x, y, i);
                                     if continue_ == true {
@@ -523,11 +536,13 @@ pub mod arena {
                                         }
                                     }
                                 } else if !self.is_ate(x, y) {
+                                    eprintln!("appel 2\n");
                                     let (mut continue_, mut nb, mut new_x, mut new_y, mut dir) =
                                         self.come_back(&map, x, y, i);
                                     while continue_ == true && nb > 1 {
+                                        eprintln!("appel 3\n");
                                         (continue_, nb, new_x, new_y, dir) =
-                                            self.come_back(&map, x, y, nb);
+                                            self.come_back(&map, new_x, new_y, nb);
                                     }
                                     if nb == 1 && continue_ == true {
                                         if dir == 0 {
@@ -647,52 +662,44 @@ pub mod arena {
             false
         }
         pub fn is_ate(&self, x: usize, y: usize) -> bool {
-            if y > 0
-                && is_mouth(self.map[(y - 1) * self.nb_col + x])
-                && is_south(self.map[(y - 1) * self.nb_col + x])
+            if y > 0 && is_mouth(self.map[(y - 1) * self.nb_col + x]) &&
+                is_south(self.map[(y - 1) * self.nb_col + x])
             {
                 return true;
-            } else if y + 1 < self.nb_lin
-                && is_mouth(self.map[(y + 1) * self.nb_col + x])
-                && is_north(self.map[(y + 1) * self.nb_col + x])
+            } else if y + 1 < self.nb_lin && is_mouth(self.map[(y + 1) * self.nb_col + x]) &&
+                       is_north(self.map[(y + 1) * self.nb_col + x])
             {
                 return true;
-            } else if x > 0
-                && is_mouth(self.map[y * self.nb_col + x - 1])
-                && is_east(self.map[y * self.nb_col + x - 1])
+            } else if x > 0 && is_mouth(self.map[y * self.nb_col + x - 1]) &&
+                       is_east(self.map[y * self.nb_col + x - 1])
             {
                 return true;
-            } else if x + 1 < self.nb_col
-                && is_mouth(self.map[y * self.nb_col + x + 1])
-                && is_west(self.map[y * self.nb_col + x + 1])
+            } else if x + 1 < self.nb_col && is_mouth(self.map[y * self.nb_col + x + 1]) &&
+                       is_west(self.map[y * self.nb_col + x + 1])
             {
                 return true;
             }
             false
         }
         pub fn is_tentacled(&self, x: usize, y: usize) -> bool {
-            if y > 0
-                && is_tentacle(self.map[(y - 1) * self.nb_col + x])
-                && is_oppo(self.map[(y - 1) * self.nb_col + x])
-                && is_south(self.map[(y - 1) * self.nb_col + x])
+            if y > 0 && is_tentacle(self.map[(y - 1) * self.nb_col + x]) &&
+                is_oppo(self.map[(y - 1) * self.nb_col + x]) &&
+                is_south(self.map[(y - 1) * self.nb_col + x])
             {
                 return true;
-            } else if y + 1 < self.nb_lin
-                && is_tentacle(self.map[(y + 1) * self.nb_col + x])
-                && is_oppo(self.map[(y + 1) * self.nb_col + x])
-                && is_north(self.map[(y + 1) * self.nb_col + x])
+            } else if y + 1 < self.nb_lin && is_tentacle(self.map[(y + 1) * self.nb_col + x]) &&
+                       is_oppo(self.map[(y + 1) * self.nb_col + x]) &&
+                       is_north(self.map[(y + 1) * self.nb_col + x])
             {
                 return true;
-            } else if x > 0
-                && is_tentacle(self.map[y * self.nb_col + x - 1])
-                && is_oppo(self.map[y * self.nb_col + x - 1])
-                && is_east(self.map[y * self.nb_col + x - 1])
+            } else if x > 0 && is_tentacle(self.map[y * self.nb_col + x - 1]) &&
+                       is_oppo(self.map[y * self.nb_col + x - 1]) &&
+                       is_east(self.map[y * self.nb_col + x - 1])
             {
                 return true;
-            } else if x + 1 < self.nb_col
-                && is_tentacle(self.map[y * self.nb_col + x + 1])
-                && is_oppo(self.map[y * self.nb_col + x + 1])
-                && is_west(self.map[y * self.nb_col + x + 1])
+            } else if x + 1 < self.nb_col && is_tentacle(self.map[y * self.nb_col + x + 1]) &&
+                       is_oppo(self.map[y * self.nb_col + x + 1]) &&
+                       is_west(self.map[y * self.nb_col + x + 1])
             {
                 return true;
             }
@@ -711,24 +718,28 @@ pub mod arena {
             if x + 1 < self.nb_col {
                 let elem = self.map[y * self.nb_col + x + 1];
                 if is_tentacle(elem) && is_mine(elem) && is_west(elem) {
+                    eprintln!("is my tentacle true x:{} y:{} dir: west\n", x, y);
                     return (true, 256);
                 }
             }
             if x > 0 {
                 let elem = self.map[y * self.nb_col + x - 1];
                 if is_tentacle(elem) && is_mine(elem) && is_east(elem) {
+                    eprintln!("is my tentacle true x:{} y:{} dir: east\n", x, y);
                     return (true, 256 + 128);
                 }
             }
             if y + 1 < self.nb_lin {
-                let elem = self.map[(y + 1) * self.nb_col + x + 1];
+                let elem = self.map[(y + 1) * self.nb_col + x];
                 if is_tentacle(elem) && is_mine(elem) && is_north(elem) {
+                    eprintln!("is my tentacle true x:{} y:{} dir: north\n", x, y);
                     return (true, 0);
                 }
             }
             if y > 0 {
                 let elem = self.map[(y - 1) * self.nb_col + x];
                 if is_tentacle(elem) && is_mine(elem) && is_south(elem) {
+                    eprintln!("is my tentacle true x:{} y:{} dir: south\n", x, y);
                     return (true, 128);
                 }
             }
@@ -1077,7 +1088,7 @@ pub mod player {
             } else if self.c > 0 && self.d > 0 {
                 return (" HARVESTER".to_string(), " E".to_string());
             }
-            (" WAIT".to_string(), "".to_string())
+            ("WAIT".to_string(), "".to_string())
         }
     }
 }
@@ -1099,11 +1110,7 @@ pub const NORTH: u32 = 0;
 pub const SOUTH: u32 = 128;
 pub const WEST: u32 = 256;
 pub const EAST: u32 = 256 + 128;
-macro_rules! parse_input {
-    ( $ x : expr , $ t : ident ) => {
-        $x.trim().parse::<$t>().unwrap()
-    };
-}
+macro_rules ! parse_input { ( $ x : expr , $ t : ident ) => { $ x . trim ( ) . parse ::<$ t > ( ) . unwrap ( ) } ; }
 fn update_money(guapo: &mut Player, order: String) {
     if order == " ROOT" {
         guapo.a -= 1;
@@ -1221,7 +1228,7 @@ fn main() {
                 output.push_str(&x_new.to_string());
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
-            } else if order {
+            } else if order != "WAIT" {
                 output.push_str("GROW ");
                 output.push_str(&(id).to_string());
                 output.push_str(" ");
@@ -1242,3 +1249,4 @@ fn main() {
         }
     }
 }
+

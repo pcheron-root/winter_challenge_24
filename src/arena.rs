@@ -1,9 +1,16 @@
-// ! parfois je rush pas les prot a 6-7 de distance
-
-// ! Quand je fais un stupid move des fois j'ecrase une prot que je mange alors que je pourrais
-//   m'etendre ailleurs
+// ! repasser dans les 1 apres avoir transformer les prots en 3
 
 ////////////////////////////////////////////////////////////////////////////
+
+// ! parfois je rush pas les prot a 9 de distance
+//   il faut ranger le system de come back
+//   pour tous les 1 tester les tous les chemins 1 + jusqu'a obtenir une prot
+
+// ! quand je fais un stupid move en ecrasant une prot,
+//   dans certains cas je pourrais mettre une bouche pour grail une prot
+
+// ! quand je fais un stupid move, des fois j'utilise les ressources
+//   qui sont les moins abondantes
 
 // ! faire les sporer
 //   il faut detechter les endroits loins et proches de 2 des proteines
@@ -109,7 +116,7 @@ impl Arena {
                                 && is_oppo(self.map[y * self.nb_col + x + 1])
                                 && !self.is_forbidden_move(x, y)
                             {
-                                eprintln!("close combat");
+                                eprintln!("close combat dir {}", _dir);
                                 return (
                                     true,
                                     x,
@@ -122,7 +129,7 @@ impl Arena {
                                 && is_oppo(self.map[y * self.nb_col + x - 1])
                                 && !self.is_forbidden_move(x, y)
                             {
-                                eprintln!("close combat");
+                                eprintln!("close combat dir {}", _dir);
                                 return (
                                     true,
                                     x,
@@ -135,7 +142,7 @@ impl Arena {
                                 && is_oppo(self.map[(y - 1) * self.nb_col + x])
                                 && !self.is_forbidden_move(x, y)
                             {
-                                eprintln!("close combat");
+                                eprintln!("close combat dir {}", _dir);
                                 return (
                                     true,
                                     x,
@@ -148,7 +155,7 @@ impl Arena {
                                 && is_oppo(self.map[(y + 1) * self.nb_col + x])
                                 && !self.is_forbidden_move(x, y)
                             {
-                                eprintln!("close combat");
+                                eprintln!("close combat dir {}", _dir);
                                 return (
                                     true,
                                     x,
@@ -369,21 +376,21 @@ impl Arena {
                 }
             }
         }
-        // eprint!("map de la lose\n");
-        // print_map(map.clone(), self.nb_col, self.nb_lin);
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
-                if map[y * self.nb_col + x] == 1 {
+                if map[y * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y) {
                     let (order, dir) = guapo.find_right_cel();
-                    return (id, x, y, order, dir);
+                    let new_id = self.find_my_id(x, y, id);
+                    return (new_id, x, y, order, dir);
                 }
             }
         }
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
-                if map[y * self.nb_col + x] == 2 {
+                if map[y * self.nb_col + x] == 2 && !self.is_forbidden_move(x, y) {
                     let (order, dir) = guapo.find_right_cel();
-                    return (id, x, y, order, dir);
+                    let new_id = self.find_my_id(x, y, id);
+                    return (new_id, x, y, order, dir);
                 }
             }
         }
@@ -428,7 +435,41 @@ impl Arena {
                 return (true, nb - 1, x, y - 1, 128);
             }
         }
-        return (false, 0, 0, 0, 0);
+        // eprintln!("cel x:{} y:{} nb:{}", x, y, nb);
+        // // print_map(map.clone(), self.nb_col, self.nb_lin);
+        // if y + 1 < self.nb_lin {
+        //     eprintln!(
+        //         "cel sud, author:{} nb:{} prot:{}\n",
+        //         !self.is_forbidden_move(x, y + 1),
+        //         map[(y + 1) * self.nb_col + x],
+        //         is_protein(self.map[(y + 1) * self.nb_col + x])
+        //     );
+        // }
+        // if y > 0 {
+        //     eprintln!(
+        //         "cel nord, author:{} nb:{} prot:{}\n",
+        //         !self.is_forbidden_move(x, y - 1),
+        //         map[(y - 1) * self.nb_col + x],
+        //         is_protein(self.map[(y - 1) * self.nb_col + x])
+        //     );
+        // }
+        // if x > 0 {
+        //     eprintln!(
+        //         "cel ouest, author:{} nb:{} prot:{}\n",
+        //         !self.is_forbidden_move(x - 1, y),
+        //         map[y * self.nb_col + x - 1],
+        //         is_protein(self.map[y * self.nb_col + x - 1])
+        //     );
+        // }
+        // if x + 1 < self.nb_col {
+        //     eprintln!(
+        //         "cel est, author:{} nb:{} prot:{}\n",
+        //         !self.is_forbidden_move(x + 1, y),
+        //         map[y * self.nb_col + x + 1],
+        //         is_protein(self.map[y * self.nb_col + x + 1])
+        //     );
+        // }
+        return (false, nb, x, y, 0);
     }
 
     pub fn looking_for_prot(
@@ -457,6 +498,7 @@ impl Arena {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == i {
                         if guapo.c > 0 && guapo.d > 0 {
+                            //wtf ici guapo
                             if x + 1 < self.nb_col
                                 && map[y * self.nb_col + x + 1] > i + 1
                                 && map[y * self.nb_col + x + 1] < 32
@@ -486,19 +528,63 @@ impl Arena {
                 }
             }
         }
-        print_map(map.clone(), self.nb_col, self.nb_lin);
+        // si 1 prot -> 3 ou 32
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 1 && is_protein(self.map[y * self.nb_col + x]) {
+                    if self.is_ate(x, y) {
+                        map[y * self.nb_col + x] = 32;
+                    } else {
+                        map[y * self.nb_col + x] = 3;
+                    }
+                }
+            }
+        }
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == 1 {
+                    if x + 1 < self.nb_col
+                        && map[y * self.nb_col + x + 1] > 2
+                        && map[y * self.nb_col + x + 1] < 32
+                    {
+                        map[y * self.nb_col + x + 1] = 2;
+                    }
+                    if x > 0
+                        && map[y * self.nb_col + x - 1] > 2
+                        && map[y * self.nb_col + x - 1] < 32
+                    {
+                        map[y * self.nb_col + x - 1] = 2;
+                    }
+                    if y + 1 < self.nb_lin
+                        && map[(y + 1) * self.nb_col + x] > 2
+                        && map[(y + 1) * self.nb_col + x] < 32
+                    {
+                        map[(y + 1) * self.nb_col + x] = 2;
+                    }
+                    if y > 0
+                        && map[(y - 1) * self.nb_col + x] > 2
+                        && map[(y - 1) * self.nb_col + x] < 32
+                    {
+                        map[(y - 1) * self.nb_col + x] = 2;
+                    }
+                }
+            }
+        }
+        // si 1 2 autour
+
         for i in 0..10 {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if is_protein(self.map[y * self.nb_col + x]) {
                         if map[y * self.nb_col + x] == i {
-                            if i == 1 && is_protein(self.map[y * self.nb_col + x]) {
-                                if self.is_ate(x, y) {
-                                    map[y * self.nb_col + x] = 32;
-                                } else {
-                                    map[y * self.nb_col + x] = 2;
-                                }
-                            } else if i == 2
+                            // if i == 1 && is_protein(self.map[y * self.nb_col + x]) {
+                            //     if self.is_ate(x, y) {
+                            //         map[y * self.nb_col + x] = 32;
+                            //     } else {
+                            //         map[y * self.nb_col + x] = 3;
+                            //     }
+                            // } else
+                            if i == 2
                                 && is_protein(self.map[y * self.nb_col + x])
                                 && !self.is_ate(x, y)
                                 && guapo.a > 0
@@ -550,7 +636,7 @@ impl Arena {
                                     self.come_back(&map, x, y, i);
                                 while continue_ == true && nb > 1 {
                                     (continue_, nb, new_x, new_y, dir) =
-                                        self.come_back(&map, x, y, nb);
+                                        self.come_back(&map, new_x, new_y, nb);
                                 }
                                 if nb == 1 && continue_ == true {
                                     if dir == 0 {
@@ -747,24 +833,28 @@ impl Arena {
         if x + 1 < self.nb_col {
             let elem = self.map[y * self.nb_col + x + 1];
             if is_tentacle(elem) && is_mine(elem) && is_west(elem) {
+                eprintln!("is my tentacle true x:{} y:{} dir: west\n", x, y);
                 return (true, 256);
             }
         }
         if x > 0 {
             let elem = self.map[y * self.nb_col + x - 1];
             if is_tentacle(elem) && is_mine(elem) && is_east(elem) {
+                eprintln!("is my tentacle true x:{} y:{} dir: east\n", x, y);
                 return (true, 256 + 128);
             }
         }
         if y + 1 < self.nb_lin {
-            let elem = self.map[(y + 1) * self.nb_col + x + 1];
+            let elem = self.map[(y + 1) * self.nb_col + x];
             if is_tentacle(elem) && is_mine(elem) && is_north(elem) {
+                eprintln!("is my tentacle true x:{} y:{} dir: north\n", x, y);
                 return (true, 0);
             }
         }
         if y > 0 {
             let elem = self.map[(y - 1) * self.nb_col + x];
             if is_tentacle(elem) && is_mine(elem) && is_south(elem) {
+                eprintln!("is my tentacle true x:{} y:{} dir: south\n", x, y);
                 return (true, 128);
             }
         }
