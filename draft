@@ -1,0 +1,238 @@
+pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String, u32) {
+    // etape 1 : remplir les cases
+    let mut map = vec![5; self.nb_col * self.nb_lin];
+    for y in 0..self.nb_lin {
+        for x in 0..self.nb_col {
+            if is_wall(self.map[y * self.nb_col + x]) {
+                map[y * self.nb_col + x] = 64;
+            }
+            if is_from_organ(self.map[y * self.nb_col + x], id) {
+                map[y * self.nb_col + x] = 0;
+            }
+        }
+    }
+    for i in 0..3 {
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == i {
+                    if x + 1 < self.nb_col
+                        && map[y * self.nb_col + x + 1] > i + 1
+                        && map[y * self.nb_col + x + 1] != 64
+                    {
+                        map[y * self.nb_col + x + 1] = i + 1;
+                    }
+                    if x >= 1
+                        && map[y * self.nb_col + x - 1] > i + 1
+                        && map[y * self.nb_col + x - 1] != 64
+                    {
+                        map[y * self.nb_col + x - 1] = i + 1;
+                    }
+                    if y + 1 < self.nb_lin
+                        && map[(y + 1) * self.nb_col + x] > i + 1
+                        && map[(y + 1) * self.nb_col + x] != 64
+                    {
+                        map[(y + 1) * self.nb_col + x] = i + 1;
+                    }
+                    if y >= 1
+                        && map[(y - 1) * self.nb_col + x] > i + 1
+                        && map[(y - 1) * self.nb_col + x] != 64
+                    {
+                        map[(y - 1) * self.nb_col + x] = i + 1;
+                    }
+                }
+            }
+        }
+    }
+    // close combat
+    for y in 0..self.nb_lin {
+        for x in 0..self.nb_col {
+            if i == 1 {
+                if is_oppo(self.map[y * self.nb_col + x]) {
+                    let (is_already_attack, _dir) = self.is_targetate_by_my_tentacle(x, y);
+                    if is_already_attack {
+                        if x + 1 < self.nb_col
+                            && is_oppo(self.map[y * self.nb_col + x + 1])
+                            && !self.is_forbidden_move(x + 1, y)
+                        {
+                            eprintln!("close combat");
+                            return (
+                                true,
+                                x,
+                                y,
+                                " TENTACLE".to_string(),
+                                " E".to_string(),
+                                self.find_my_id(x, y, id),
+                            );
+                        } else if x > 0
+                            && is_oppo(self.map[y * self.nb_col + x - 1])
+                            && !self.is_forbidden_move(x - 1, y)
+                        {
+                            eprintln!("close combat");
+                            return (
+                                true,
+                                x,
+                                y,
+                                " TENTACLE".to_string(),
+                                " W".to_string(),
+                                self.find_my_id(x, y, id),
+                            );
+                        } else if y > 0
+                            && is_oppo(self.map[(y - 1) * self.nb_col + x])
+                            && !self.is_forbidden_move(x, y)
+                        {
+                            eprintln!("close combat");
+                            return (
+                                true,
+                                x,
+                                y,
+                                " TENTACLE".to_string(),
+                                " N".to_string(),
+                                self.find_my_id(x, y, id),
+                            );
+                        } else if y + 1 < self.nb_lin
+                            && is_oppo(self.map[(y + 1) * self.nb_col + x])
+                            && !self.is_forbidden_move(x, y)
+                        {
+                            eprintln!("close combat");
+                            return (
+                                true,
+                                x,
+                                y,
+                                " TENTACLE".to_string(),
+                                " S".to_string(),
+                                self.find_my_id(x, y, id),
+                            );
+                        }
+                    }
+                    map[y * self.nb_col + x] = 2;
+                }
+            }
+        }
+    }
+
+    for y in 0..self.nb_lin {
+        for x in 0..self.nb_col {
+            // enemie a 2 de distance
+            if i == 2 {
+                if is_oppo(self.map[y * self.nb_col + x]) {
+                    if x + 1 < self.nb_col {
+                        if map[y * self.nb_col + x + 1] == 1 && !self.is_forbidden_move(x + 1, y) {
+                            eprintln!("combat 2");
+                            return (
+                                true,
+                                x + 1,
+                                y,
+                                " TENTACLE".to_string(),
+                                " W".to_string(),
+                                self.find_my_id(x + 1, y, id),
+                            );
+                        }
+                    }
+                    if x > 0 {
+                        if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
+                            eprintln!("combat 2");
+                            return (
+                                true,
+                                x - 1,
+                                y,
+                                " TENTACLE".to_string(),
+                                " E".to_string(),
+                                self.find_my_id(x - 1, y, id),
+                            );
+                        }
+                    }
+                    if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
+                        if map[(y + 1) * self.nb_col + x] == 1 {
+                            eprintln!("combat 2");
+                            return (
+                                true,
+                                x,
+                                y + 1,
+                                " TENTACLE".to_string(),
+                                " N".to_string(),
+                                self.find_my_id(x, y + 1, id),
+                            );
+                        }
+                    }
+                    if y > 0 {
+                        if map[(y - 1) * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y - 1)
+                        {
+                            eprintln!("combat 2");
+
+                            return (
+                                true,
+                                x,
+                                y - 1,
+                                " TENTACLE".to_string(),
+                                " S".to_string(),
+                                self.find_my_id(x, y - 1, id),
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // enemie a 3 de distance
+    for y in 0..self.nb_lin {
+        for x in 0..self.nb_col {
+            if map[y * self.nb_col + x] == 2 && self.is_enemy_next_to(x, y) {
+                if x + 1 < self.nb_col {
+                    if map[y * self.nb_col + x + 1] == 1 && !self.is_forbidden_move(x + 1, y) {
+                        eprintln!("combat 3");
+                        return (
+                            true,
+                            x + 1,
+                            y,
+                            " TENTACLE".to_string(),
+                            " W".to_string(),
+                            self.find_my_id(x + 1, y, id),
+                        );
+                    }
+                }
+                if x > 0 {
+                    if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
+                        eprintln!("combat 3");
+                        return (
+                            true,
+                            x - 1,
+                            y,
+                            " TENTACLE".to_string(),
+                            " E".to_string(),
+                            self.find_my_id(x - 1, y, id),
+                        );
+                    }
+                }
+                if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
+                    if map[(y + 1) * self.nb_col + x] == 1 {
+                        eprintln!("combat 3");
+                        return (
+                            true,
+                            x,
+                            y + 1,
+                            " TENTACLE".to_string(),
+                            " N".to_string(),
+                            self.find_my_id(x, y + 1, id),
+                        );
+                    }
+                }
+                if y > 0 {
+                    if map[(y - 1) * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y - 1) {
+                        eprintln!("combat 3");
+                        return (
+                            true,
+                            x,
+                            y - 1,
+                            " TENTACLE".to_string(),
+                            " S".to_string(),
+                            self.find_my_id(x, y - 1, id),
+                        );
+                    }
+                }
+            }
+        }
+    }
+    eprint!("I don't find tentacle to summon");
+    print_map(map.clone(), self.nb_col, self.nb_lin);
+    return (false, 0, 0, "".to_string(), "".to_string(), 0);
+}
