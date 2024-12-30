@@ -1,6 +1,46 @@
-pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String, u32) {
-    // etape 1 : remplir les cases
-    let mut map = vec![5; self.nb_col * self.nb_lin];
+pub fn come_back(
+    &self,
+    map: &Vec<u32>,
+    x: usize,
+    y: usize,
+    nb: u32,
+) -> (bool, usize, usize, usize, u32) {
+    if nb > 1 {
+        if x + 1 < self.nb_col
+            && map[y * self.nb_col + x + 1] == nb - 1
+            && !is_protein(self.map[y * self.nb_col + x + 1])
+        {
+            return (true, nb - 1, x + 1, 256);
+        }
+        if x > 0
+            && map[y * self.nb_col + x - 1] == nb - 1
+            && !is_protein(self.map[y * self.nb_col + x - 1])
+        {
+            return (true, nb - 1, x - 1, y, 256 + 128);
+        }
+        if y + 1 < self.nb_lin
+            && map[(y + 1) * self.nb_col + x] == nb - 1
+            && !is_protein(self.map[(y + 1) * self.nb_col + x])
+        {
+            return (true, nb - 1, x, y + 1, 0);
+        }
+        if y > 0
+            && map[(y - 1) * self.nb_col + x] == nb - 1
+            && !is_protein(self.map[(y - 1) * self.nb_col + x])
+        {
+            return (true, nb - 1, x, y - 1, 128);
+        }
+    }
+    return (false, 0, 0, 0, 0);
+}
+
+pub fn looking_for_prot(
+    &self,
+    id: u32,
+    guapo: &Player,
+    _oppo: &Player,
+) -> (u32, usize, usize, String, String) {
+    let mut map = vec![11; self.nb_col * self.nb_lin];
     for y in 0..self.nb_lin {
         for x in 0..self.nb_col {
             if is_wall(self.map[y * self.nb_col + x]) {
@@ -8,231 +48,151 @@ pub fn is_enemy_near(&self, id: u32) -> (bool, usize, usize, String, String, u32
             }
             if is_from_organ(self.map[y * self.nb_col + x], id) {
                 map[y * self.nb_col + x] = 0;
+            } else if is_mine(self.map[y * self.nb_col + x])
+                || is_oppo(self.map[y * self.nb_col + x])
+            {
+                map[y * self.nb_col + x] = 32;
             }
         }
     }
-    for i in 0..3 {
+    for i in 0..10 {
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
                 if map[y * self.nb_col + x] == i {
-                    if x + 1 < self.nb_col
-                        && map[y * self.nb_col + x + 1] > i + 1
-                        && map[y * self.nb_col + x + 1] != 64
-                    {
-                        map[y * self.nb_col + x + 1] = i + 1;
-                    }
-                    if x >= 1
-                        && map[y * self.nb_col + x - 1] > i + 1
-                        && map[y * self.nb_col + x - 1] != 64
-                    {
-                        map[y * self.nb_col + x - 1] = i + 1;
-                    }
-                    if y + 1 < self.nb_lin
-                        && map[(y + 1) * self.nb_col + x] > i + 1
-                        && map[(y + 1) * self.nb_col + x] != 64
-                    {
-                        map[(y + 1) * self.nb_col + x] = i + 1;
-                    }
-                    if y >= 1
-                        && map[(y - 1) * self.nb_col + x] > i + 1
-                        && map[(y - 1) * self.nb_col + x] != 64
-                    {
-                        map[(y - 1) * self.nb_col + x] = i + 1;
-                    }
-                }
-            }
-        }
-    }
-    // close combat
-    for y in 0..self.nb_lin {
-        for x in 0..self.nb_col {
-            if i == 1 {
-                if is_oppo(self.map[y * self.nb_col + x]) {
-                    let (is_already_attack, _dir) = self.is_targetate_by_my_tentacle(x, y);
-                    if is_already_attack {
+                    if guapo.c > 0 && guapo.d > 0 {
                         if x + 1 < self.nb_col
-                            && is_oppo(self.map[y * self.nb_col + x + 1])
-                            && !self.is_forbidden_move(x + 1, y)
+                            && map[y * self.nb_col + x + 1] > i + 1
+                            && map[y * self.nb_col + x + 1] < 32
                         {
-                            eprintln!("close combat");
-                            return (
-                                true,
-                                x,
-                                y,
-                                " TENTACLE".to_string(),
-                                " E".to_string(),
-                                self.find_my_id(x, y, id),
-                            );
-                        } else if x > 0
-                            && is_oppo(self.map[y * self.nb_col + x - 1])
-                            && !self.is_forbidden_move(x - 1, y)
-                        {
-                            eprintln!("close combat");
-                            return (
-                                true,
-                                x,
-                                y,
-                                " TENTACLE".to_string(),
-                                " W".to_string(),
-                                self.find_my_id(x, y, id),
-                            );
-                        } else if y > 0
-                            && is_oppo(self.map[(y - 1) * self.nb_col + x])
-                            && !self.is_forbidden_move(x, y)
-                        {
-                            eprintln!("close combat");
-                            return (
-                                true,
-                                x,
-                                y,
-                                " TENTACLE".to_string(),
-                                " N".to_string(),
-                                self.find_my_id(x, y, id),
-                            );
-                        } else if y + 1 < self.nb_lin
-                            && is_oppo(self.map[(y + 1) * self.nb_col + x])
-                            && !self.is_forbidden_move(x, y)
-                        {
-                            eprintln!("close combat");
-                            return (
-                                true,
-                                x,
-                                y,
-                                " TENTACLE".to_string(),
-                                " S".to_string(),
-                                self.find_my_id(x, y, id),
-                            );
+                            map[y * self.nb_col + x + 1] = i + 1;
                         }
-                    }
-                    map[y * self.nb_col + x] = 2;
-                }
-            }
-        }
-    }
-
-    for y in 0..self.nb_lin {
-        for x in 0..self.nb_col {
-            // enemie a 2 de distance
-            if i == 2 {
-                if is_oppo(self.map[y * self.nb_col + x]) {
-                    if x + 1 < self.nb_col {
-                        if map[y * self.nb_col + x + 1] == 1 && !self.is_forbidden_move(x + 1, y) {
-                            eprintln!("combat 2");
-                            return (
-                                true,
-                                x + 1,
-                                y,
-                                " TENTACLE".to_string(),
-                                " W".to_string(),
-                                self.find_my_id(x + 1, y, id),
-                            );
-                        }
-                    }
-                    if x > 0 {
-                        if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
-                            eprintln!("combat 2");
-                            return (
-                                true,
-                                x - 1,
-                                y,
-                                " TENTACLE".to_string(),
-                                " E".to_string(),
-                                self.find_my_id(x - 1, y, id),
-                            );
-                        }
-                    }
-                    if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
-                        if map[(y + 1) * self.nb_col + x] == 1 {
-                            eprintln!("combat 2");
-                            return (
-                                true,
-                                x,
-                                y + 1,
-                                " TENTACLE".to_string(),
-                                " N".to_string(),
-                                self.find_my_id(x, y + 1, id),
-                            );
-                        }
-                    }
-                    if y > 0 {
-                        if map[(y - 1) * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y - 1)
+                        if x > 0
+                            && map[y * self.nb_col + x - 1] > i + 1
+                            && map[y * self.nb_col + x - 1] < 32
                         {
-                            eprintln!("combat 2");
-
-                            return (
-                                true,
-                                x,
-                                y - 1,
-                                " TENTACLE".to_string(),
-                                " S".to_string(),
-                                self.find_my_id(x, y - 1, id),
-                            );
+                            map[y * self.nb_col + x - 1] = i + 1;
+                        }
+                        if y + 1 < self.nb_lin
+                            && map[(y + 1) * self.nb_col + x] > i + 1
+                            && map[(y + 1) * self.nb_col + x] < 32
+                        {
+                            map[(y + 1) * self.nb_col + x] = i + 1;
+                        }
+                        if y > 0
+                            && map[(y - 1) * self.nb_col + x] > i + 1
+                            && map[(y - 1) * self.nb_col + x] < 32
+                        {
+                            map[(y - 1) * self.nb_col + x] = i + 1;
                         }
                     }
                 }
             }
         }
     }
-    // enemie a 3 de distance
-    for y in 0..self.nb_lin {
-        for x in 0..self.nb_col {
-            if map[y * self.nb_col + x] == 2 && self.is_enemy_next_to(x, y) {
-                if x + 1 < self.nb_col {
-                    if map[y * self.nb_col + x + 1] == 1 && !self.is_forbidden_move(x + 1, y) {
-                        eprintln!("combat 3");
-                        return (
-                            true,
-                            x + 1,
-                            y,
-                            " TENTACLE".to_string(),
-                            " W".to_string(),
-                            self.find_my_id(x + 1, y, id),
-                        );
-                    }
-                }
-                if x > 0 {
-                    if map[y * self.nb_col + x - 1] == 1 && !self.is_forbidden_move(x - 1, y) {
-                        eprintln!("combat 3");
-                        return (
-                            true,
-                            x - 1,
-                            y,
-                            " TENTACLE".to_string(),
-                            " E".to_string(),
-                            self.find_my_id(x - 1, y, id),
-                        );
-                    }
-                }
-                if y + 1 < self.nb_lin && !self.is_forbidden_move(x, y + 1) {
-                    if map[(y + 1) * self.nb_col + x] == 1 {
-                        eprintln!("combat 3");
-                        return (
-                            true,
-                            x,
-                            y + 1,
-                            " TENTACLE".to_string(),
-                            " N".to_string(),
-                            self.find_my_id(x, y + 1, id),
-                        );
-                    }
-                }
-                if y > 0 {
-                    if map[(y - 1) * self.nb_col + x] == 1 && !self.is_forbidden_move(x, y - 1) {
-                        eprintln!("combat 3");
-                        return (
-                            true,
-                            x,
-                            y - 1,
-                            " TENTACLE".to_string(),
-                            " S".to_string(),
-                            self.find_my_id(x, y - 1, id),
-                        );
+    for i in 0..10 {
+        for y in 0..self.nb_lin {
+            for x in 0..self.nb_col {
+                if map[y * self.nb_col + x] == i {
+                    if i == 1 && is_protein(self.map[y * self.nb_col + x]) {
+                        if self.is_ate(x, y) {
+                            self.map[y * self.nb_col + x] = 32;
+                        } else {
+                            self.map[y * self.nb_col + x] = 2;
+                        }
+                    } else if is_protein(self.map[y * self.nb_col + x]) && !self.is_ate(x, y) {
+                        let (continue_, nb, new_x, new_y, dir) = come_back(&map, x, y, i);
+                        while continue_ == true && nb > 1 {
+                            (continue_, nb, new_x, new_y, dir) = come_back(&map, x, y, i);
+                        }
+                        if nb == 1 && continue_ == true {
+                            return ();
+                        }
                     }
                 }
             }
         }
     }
-    eprint!("I don't find tentacle to summon");
-    print_map(map.clone(), self.nb_col, self.nb_lin);
-    return (false, 0, 0, "".to_string(), "".to_string(), 0);
+    return self.find_stupid_move(id, guapo);
 }
+
+// if i == 1
+//     && is_protein(self.map[y * self.nb_col + x + 1])
+//     && !self.is_ate(x + 1, y)
+//     && !self.is_ate(x, y)
+//     && !self.is_forbidden_move(x, y)
+// {
+//     return (
+//         self.find_my_id(x, y, id),
+//         x,
+//         y,
+//         " HARVESTER".to_string(),
+//         " E".to_string(),
+//     );
+// }
+
+// if i == 1
+// && is_protein(self.map[y * self.nb_col + x - 1])
+// && !self.is_ate(x - 1, y)
+// && !self.is_ate(x, y)
+// && !self.is_forbidden_move(x, y)
+// {
+//     return (
+//         self.find_my_id(x, y, id),
+//         x,
+//         y,
+//         " HARVESTER".to_string(),
+//         " W".to_string(),
+//     );
+// }
+
+// if i == 1
+// && is_protein(self.map[(y - 1) * self.nb_col + x])
+// && !self.is_ate(x, y - 1)
+// && !self.is_ate(x, y)
+// && !self.is_forbidden_move(x, y)
+// {
+//     return (
+//         self.find_my_id(x, y, id),
+//         x,
+//         y,
+//         " HARVESTER".to_string(),
+//         " N".to_string(),
+//     );
+// }
+
+// if i == 1
+// && is_protein(self.map[(y + 1) * self.nb_col + x])
+// && !self.is_ate(x, y + 1)
+// && !self.is_ate(x, y)
+// && !self.is_forbidden_move(x, y)
+// {
+//     return (
+//         self.find_my_id(x, y, id),
+//         x,
+//         y,
+//         " HARVESTER".to_string(),
+//         " S".to_string(),
+//     );
+// }
+
+// if is_protein(self.map[y * self.nb_col + x])
+// && !self.is_ate(x, y)
+// && !self.is_forbidden_move(x, y)
+// {
+//     if i == 1 {
+//         map[y * self.nb_col + x] = 2;
+//     } else {
+//         if guapo.a > 0 {
+//             // un premier algo qui rush les prots a 2 de distance
+//             // un algo qui rush la prot qu'il me manque
+//             // find origin // chercher a ne pas ecraser une proteine dans l'ideal
+//             // si c'est une proteine que je mange, je la considere comme un mur
+//             // je peux chercher a la prendre plus tard
+//             // ln!("rush closest prot with basic");
+//             return (id, x, y, " BASIC".to_string(), "".to_string());
+//         } else if guapo.b > 0 && guapo.c > 0 {
+//             // eprintln!("rush closest prot with tentacle");
+//             return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+//         }
+//     }
+// }

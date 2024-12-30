@@ -289,8 +289,8 @@ impl Arena {
                 }
             }
         }
-        eprint!("I don't find tentacle to summon");
-        print_map(map.clone(), self.nb_col, self.nb_lin);
+        // eprint!("I don't find tentacle to summon");
+        // print_map(map.clone(), self.nb_col, self.nb_lin);
         return (false, 0, 0, "".to_string(), "".to_string(), 0);
     }
 
@@ -489,13 +489,49 @@ impl Arena {
         return (0, 0, 0, "WAIT".to_string(), "".to_string());
     }
 
+    pub fn come_back(
+        &self,
+        map: &Vec<u32>,
+        x: usize,
+        y: usize,
+        nb: u32,
+    ) -> (bool, u32, usize, usize, u32) {
+        if nb > 1 {
+            if x + 1 < self.nb_col
+                && map[y * self.nb_col + x + 1] == nb - 1
+                && !is_protein(self.map[y * self.nb_col + x + 1])
+            {
+                return (true, nb - 1, x + 1, y, 256);
+            }
+            if x > 0
+                && map[y * self.nb_col + x - 1] == nb - 1
+                && !is_protein(self.map[y * self.nb_col + x - 1])
+            {
+                return (true, nb - 1, x - 1, y, 256 + 128);
+            }
+            if y + 1 < self.nb_lin
+                && map[(y + 1) * self.nb_col + x] == nb - 1
+                && !is_protein(self.map[(y + 1) * self.nb_col + x])
+            {
+                return (true, nb - 1, x, y + 1, 0);
+            }
+            if y > 0
+                && map[(y - 1) * self.nb_col + x] == nb - 1
+                && !is_protein(self.map[(y - 1) * self.nb_col + x])
+            {
+                return (true, nb - 1, x, y - 1, 128);
+            }
+        }
+        return (false, 0, 0, 0, 0);
+    }
+
     pub fn looking_for_prot(
         &self,
         id: u32,
         guapo: &Player,
         _oppo: &Player,
     ) -> (u32, usize, usize, String, String) {
-        let mut map = vec![4; self.nb_col * self.nb_lin];
+        let mut map = vec![11; self.nb_col * self.nb_lin];
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
                 if is_wall(self.map[y * self.nb_col + x]) {
@@ -503,115 +539,146 @@ impl Arena {
                 }
                 if is_from_organ(self.map[y * self.nb_col + x], id) {
                     map[y * self.nb_col + x] = 0;
-                } else if is_mine(self.map[y * self.nb_col + x]) {
+                } else if is_mine(self.map[y * self.nb_col + x])
+                    || is_oppo(self.map[y * self.nb_col + x])
+                {
                     map[y * self.nb_col + x] = 32;
                 }
             }
         }
-        for i in 0..7 {
+        for i in 0..10 {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == i {
                         if guapo.c > 0 && guapo.d > 0 {
                             if x + 1 < self.nb_col
                                 && map[y * self.nb_col + x + 1] > i + 1
-                                && map[y * self.nb_col + x + 1] != 64
+                                && map[y * self.nb_col + x + 1] < 32
                             {
                                 map[y * self.nb_col + x + 1] = i + 1;
-                                if i == 1
-                                    && is_protein(self.map[y * self.nb_col + x + 1])
-                                    && !self.is_ate(x + 1, y)
-                                    && !self.is_ate(x, y)
-                                    && !self.is_forbidden_move(x, y)
-                                {
-                                    return (
-                                        self.find_my_id(x, y, id),
-                                        x,
-                                        y,
-                                        " HARVESTER".to_string(),
-                                        " E".to_string(),
-                                    );
-                                }
                             }
                             if x > 0
                                 && map[y * self.nb_col + x - 1] > i + 1
-                                && map[y * self.nb_col + x - 1] != 64
+                                && map[y * self.nb_col + x - 1] < 32
                             {
                                 map[y * self.nb_col + x - 1] = i + 1;
-                                if i == 1
-                                    && is_protein(self.map[y * self.nb_col + x - 1])
-                                    && !self.is_ate(x - 1, y)
-                                    && !self.is_ate(x, y)
-                                    && !self.is_forbidden_move(x, y)
-                                {
-                                    return (
-                                        self.find_my_id(x, y, id),
-                                        x,
-                                        y,
-                                        " HARVESTER".to_string(),
-                                        " W".to_string(),
-                                    );
-                                }
                             }
                             if y + 1 < self.nb_lin
                                 && map[(y + 1) * self.nb_col + x] > i + 1
-                                && map[(y + 1) * self.nb_col + x] != 64
+                                && map[(y + 1) * self.nb_col + x] < 32
                             {
                                 map[(y + 1) * self.nb_col + x] = i + 1;
-                                if i == 1
-                                    && is_protein(self.map[(y + 1) * self.nb_col + x])
-                                    && !self.is_ate(x, y + 1)
-                                    && !self.is_ate(x, y)
-                                    && !self.is_forbidden_move(x, y)
-                                {
-                                    return (
-                                        self.find_my_id(x, y, id),
-                                        x,
-                                        y,
-                                        " HARVESTER".to_string(),
-                                        " S".to_string(),
-                                    );
-                                }
                             }
                             if y > 0
                                 && map[(y - 1) * self.nb_col + x] > i + 1
-                                && map[(y - 1) * self.nb_col + x] != 64
+                                && map[(y - 1) * self.nb_col + x] < 32
                             {
                                 map[(y - 1) * self.nb_col + x] = i + 1;
-                                if i == 1
-                                    && is_protein(self.map[(y - 1) * self.nb_col + x])
-                                    && !self.is_ate(x, y - 1)
-                                    && !self.is_ate(x, y)
-                                    && !self.is_forbidden_move(x, y)
-                                {
-                                    return (
-                                        self.find_my_id(x, y, id),
-                                        x,
-                                        y,
-                                        " HARVESTER".to_string(),
-                                        " N".to_string(),
-                                    );
-                                }
                             }
                         }
-                        if is_protein(self.map[y * self.nb_col + x])
-                            && !self.is_ate(x, y)
-                            && !self.is_forbidden_move(x, y)
-                        {
-                            if i == 1 {
-                                map[y * self.nb_col + x] = 2;
-                            } else {
-                                if guapo.a > 0 {
-                                    // un premier algo qui rush les prots a 2 de distance
-                                    // un algo qui rush la prot qu'il me manque
-                                    // find origin // chercher a ne pas ecraser une proteine dans l'ideal
-                                    // si c'est une proteine que je mange, je la considere comme un mur
-                                    // je peux chercher a la prendre plus tard
-                                    // ln!("rush closest prot with basic");
-                                    return (id, x, y, " BASIC".to_string(), "".to_string());
-                                } else if guapo.b > 0 && guapo.c > 0 {
-                                    // eprintln!("rush closest prot with tentacle");
-                                    return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+                    }
+                }
+            }
+        }
+        for i in 0..10 {
+            for y in 0..self.nb_lin {
+                for x in 0..self.nb_col {
+                    if is_protein(self.map[y * self.nb_col + x]) {
+                        if map[y * self.nb_col + x] == i {
+                            if i == 1 && is_protein(self.map[y * self.nb_col + x]) {
+                                if self.is_ate(x, y) {
+                                    map[y * self.nb_col + x] = 32;
+                                } else {
+                                    map[y * self.nb_col + x] = 2;
+                                }
+                            } else if i == 2
+                                && is_protein(self.map[y * self.nb_col + x])
+                                && !self.is_ate(x, y)
+                            {
+                                let (continue_, _nb, new_x, new_y, dir) =
+                                    self.come_back(&map, x, y, i);
+                                if continue_ == true {
+                                    if dir == 0 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " HARVESTER".to_string(),
+                                            " N".to_string(),
+                                        );
+                                    } else if dir == 128 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " HARVESTER".to_string(),
+                                            " S".to_string(),
+                                        );
+                                    } else if dir == 256 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " HARVESTER".to_string(),
+                                            " W".to_string(),
+                                        );
+                                    } else {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " HARVESTER".to_string(),
+                                            " E".to_string(),
+                                        );
+                                    }
+                                }
+                            } else if !self.is_ate(x, y) {
+                                eprintln!("j'ai trouve une prot a rush");
+                                let (mut continue_, mut nb, mut new_x, mut new_y, mut dir) =
+                                    self.come_back(&map, x, y, i);
+                                while continue_ == true && nb > 1 {
+                                    (continue_, nb, new_x, new_y, dir) =
+                                        self.come_back(&map, x, y, nb);
+                                    eprintln!("je boucle sur x:{}, y:{}, nb:{}", new_x, new_y, nb);
+                                }
+                                // attention aux moves interdits
+                                // axe d'amelioration -> je construit que des basics
+                                // si la dist est 2 faire un bouche
+                                // si je peux pas faire de bouche j'ecrase les prot que je mange pas
+                                if nb == 1 && continue_ == true {
+                                    if dir == 0 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " BASIC".to_string(),
+                                            " N".to_string(),
+                                        );
+                                    } else if dir == 128 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " BASIC".to_string(),
+                                            " S".to_string(),
+                                        );
+                                    } else if dir == 256 {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " BASIC".to_string(),
+                                            " W".to_string(),
+                                        );
+                                    } else {
+                                        return (
+                                            self.find_my_id(new_x, new_y, id),
+                                            new_x,
+                                            new_y,
+                                            " BASIC".to_string(),
+                                            " E".to_string(),
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -619,8 +686,142 @@ impl Arena {
                 }
             }
         }
+        eprintln!("pas de boucle infinie");
         return self.find_stupid_move(id, guapo);
     }
+
+    // pub fn looking_for_prot(
+    //     &self,
+    //     id: u32,
+    //     guapo: &Player,
+    //     _oppo: &Player,
+    // ) -> (u32, usize, usize, String, String) {
+    //     let mut map = vec![4; self.nb_col * self.nb_lin];
+    //     for y in 0..self.nb_lin {
+    //         for x in 0..self.nb_col {
+    //             if is_wall(self.map[y * self.nb_col + x]) {
+    //                 map[y * self.nb_col + x] = 64;
+    //             }
+    //             if is_from_organ(self.map[y * self.nb_col + x], id) {
+    //                 map[y * self.nb_col + x] = 0;
+    //             } else if is_mine(self.map[y * self.nb_col + x]) {
+    //                 map[y * self.nb_col + x] = 32;
+    //             }
+    //         }
+    //     }
+    //     for i in 0..7 {
+    //         for y in 0..self.nb_lin {
+    //             for x in 0..self.nb_col {
+    //                 if map[y * self.nb_col + x] == i {
+    //                     if guapo.c > 0 && guapo.d > 0 {
+    //                         if x + 1 < self.nb_col
+    //                             && map[y * self.nb_col + x + 1] > i + 1
+    //                             && map[y * self.nb_col + x + 1] != 64
+    //                         {
+    //                             map[y * self.nb_col + x + 1] = i + 1;
+    //                             if i == 1
+    //                                 && is_protein(self.map[y * self.nb_col + x + 1])
+    //                                 && !self.is_ate(x + 1, y)
+    //                                 && !self.is_ate(x, y)
+    //                                 && !self.is_forbidden_move(x, y)
+    //                             {
+    //                                 return (
+    //                                     self.find_my_id(x, y, id),
+    //                                     x,
+    //                                     y,
+    //                                     " HARVESTER".to_string(),
+    //                                     " E".to_string(),
+    //                                 );
+    //                             }
+    //                         }
+    //                         if x > 0
+    //                             && map[y * self.nb_col + x - 1] > i + 1
+    //                             && map[y * self.nb_col + x - 1] != 64
+    //                         {
+    //                             map[y * self.nb_col + x - 1] = i + 1;
+    //                             if i == 1
+    //                                 && is_protein(self.map[y * self.nb_col + x - 1])
+    //                                 && !self.is_ate(x - 1, y)
+    //                                 && !self.is_ate(x, y)
+    //                                 && !self.is_forbidden_move(x, y)
+    //                             {
+    //                                 return (
+    //                                     self.find_my_id(x, y, id),
+    //                                     x,
+    //                                     y,
+    //                                     " HARVESTER".to_string(),
+    //                                     " W".to_string(),
+    //                                 );
+    //                             }
+    //                         }
+    //                         if y + 1 < self.nb_lin
+    //                             && map[(y + 1) * self.nb_col + x] > i + 1
+    //                             && map[(y + 1) * self.nb_col + x] != 64
+    //                         {
+    //                             map[(y + 1) * self.nb_col + x] = i + 1;
+    //                             if i == 1
+    //                                 && is_protein(self.map[(y + 1) * self.nb_col + x])
+    //                                 && !self.is_ate(x, y + 1)
+    //                                 && !self.is_ate(x, y)
+    //                                 && !self.is_forbidden_move(x, y)
+    //                             {
+    //                                 return (
+    //                                     self.find_my_id(x, y, id),
+    //                                     x,
+    //                                     y,
+    //                                     " HARVESTER".to_string(),
+    //                                     " S".to_string(),
+    //                                 );
+    //                             }
+    //                         }
+    //                         if y > 0
+    //                             && map[(y - 1) * self.nb_col + x] > i + 1
+    //                             && map[(y - 1) * self.nb_col + x] != 64
+    //                         {
+    //                             map[(y - 1) * self.nb_col + x] = i + 1;
+    //                             if i == 1
+    //                                 && is_protein(self.map[(y - 1) * self.nb_col + x])
+    //                                 && !self.is_ate(x, y - 1)
+    //                                 && !self.is_ate(x, y)
+    //                                 && !self.is_forbidden_move(x, y)
+    //                             {
+    //                                 return (
+    //                                     self.find_my_id(x, y, id),
+    //                                     x,
+    //                                     y,
+    //                                     " HARVESTER".to_string(),
+    //                                     " N".to_string(),
+    //                                 );
+    //                             }
+    //                         }
+    //                     }
+    //                     if is_protein(self.map[y * self.nb_col + x])
+    //                         && !self.is_ate(x, y)
+    //                         && !self.is_forbidden_move(x, y)
+    //                     {
+    //                         if i == 1 {
+    //                             map[y * self.nb_col + x] = 2;
+    //                         } else {
+    //                             if guapo.a > 0 {
+    //                                 // un premier algo qui rush les prots a 2 de distance
+    //                                 // un algo qui rush la prot qu'il me manque
+    //                                 // find origin // chercher a ne pas ecraser une proteine dans l'ideal
+    //                                 // si c'est une proteine que je mange, je la considere comme un mur
+    //                                 // je peux chercher a la prendre plus tard
+    //                                 // ln!("rush closest prot with basic");
+    //                                 return (id, x, y, " BASIC".to_string(), "".to_string());
+    //                             } else if guapo.b > 0 && guapo.c > 0 {
+    //                                 // eprintln!("rush closest prot with tentacle");
+    //                                 return (id, x, y, " TENTACLE".to_string(), " W".to_string());
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return self.find_stupid_move(id, guapo);
+    // }
 
     pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
         if y > 0 && is_oppo(self.map[(y - 1) * self.nb_col + x]) {

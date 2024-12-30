@@ -4,7 +4,7 @@
 pub mod arena;
 pub mod player;
 
-use arena::{print_map, Arena};
+use arena::Arena;
 use player::Player;
 use std::io;
 
@@ -62,6 +62,9 @@ fn main() {
     let mut opponent = Player::new();
 
     loop {
+        for val in arena.map.iter_mut() {
+            *val = 0;
+        }
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let entity_count = parse_input!(input_line, i32);
