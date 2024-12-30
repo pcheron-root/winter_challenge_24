@@ -1,10 +1,14 @@
-// ! ne pas ecraser les prots que je mange
-//   pour le rush de proteines
-//   il faut revoir le programme qui rush les prots a + de 2 de distance
-//
+// ! parfois je rush pas les prot a 6-7 de distance
+
+// ! Quand je fais un stupid move des fois j'ecrase une prot que je mange alors que je pourrais
+//   m'etendre ailleurs
+
+////////////////////////////////////////////////////////////////////////////
 
 // ! faire les sporer
 //   il faut detechter les endroits loins et proches de 2 des proteines
+
+////////////////////////////////////////////////////////////////////////////
 
 use super::Player;
 
@@ -328,6 +332,8 @@ impl Arena {
 
     pub fn find_stupid_move(&self, id: u32, guapo: &Player) -> (u32, usize, usize, String, String) {
         let mut map = vec![4; self.nb_col * self.nb_lin];
+        eprintln!("je fais un stupid move");
+
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
                 if is_wall(self.map[y * self.nb_col + x]) {
@@ -368,30 +374,16 @@ impl Arena {
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
                 if map[y * self.nb_col + x] == 1 {
-                    if guapo.a > 0 {
-                        return (id, x, y, " BASIC".to_string(), "".to_string());
-                    } else if guapo.b > 0 && guapo.c > 0 {
-                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
-                    } else if guapo.b > 0 && guapo.d > 0 {
-                        return (id, x, y, " SPORER".to_string(), " E".to_string());
-                    } else if guapo.c > 0 && guapo.d > 0 {
-                        return (id, x, y, " HARVESTER".to_string(), " E".to_string());
-                    }
+                    let (order, dir) = guapo.find_right_cel();
+                    return (id, x, y, order, dir);
                 }
             }
         }
         for y in 0..self.nb_lin {
             for x in 0..self.nb_col {
                 if map[y * self.nb_col + x] == 2 {
-                    if guapo.a > 0 {
-                        return (id, x, y, " BASIC".to_string(), "".to_string());
-                    } else if guapo.b > 0 && guapo.c > 0 {
-                        return (id, x, y, " TENTACLE".to_string(), " W".to_string());
-                    } else if guapo.b > 0 && guapo.d > 0 {
-                        return (id, x, y, " SPORER".to_string(), " E".to_string());
-                    } else if guapo.c > 0 && guapo.d > 0 {
-                        return (id, x, y, " HARVESTER".to_string(), " E".to_string());
-                    }
+                    let (order, dir) = guapo.find_right_cel();
+                    return (id, x, y, order, dir);
                 }
             }
         }
@@ -410,24 +402,28 @@ impl Arena {
             if x + 1 < self.nb_col
                 && map[y * self.nb_col + x + 1] == nb - 1
                 && !is_protein(self.map[y * self.nb_col + x + 1])
+                && !self.is_forbidden_move(x + 1, y)
             {
                 return (true, nb - 1, x + 1, y, 256);
             }
             if x > 0
                 && map[y * self.nb_col + x - 1] == nb - 1
                 && !is_protein(self.map[y * self.nb_col + x - 1])
+                && !self.is_forbidden_move(x - 1, y)
             {
                 return (true, nb - 1, x - 1, y, 256 + 128);
             }
             if y + 1 < self.nb_lin
                 && map[(y + 1) * self.nb_col + x] == nb - 1
                 && !is_protein(self.map[(y + 1) * self.nb_col + x])
+                && !self.is_forbidden_move(x, y + 1)
             {
                 return (true, nb - 1, x, y + 1, 0);
             }
             if y > 0
                 && map[(y - 1) * self.nb_col + x] == nb - 1
                 && !is_protein(self.map[(y - 1) * self.nb_col + x])
+                && !self.is_forbidden_move(x, y - 1)
             {
                 return (true, nb - 1, x, y - 1, 128);
             }
@@ -490,6 +486,7 @@ impl Arena {
                 }
             }
         }
+        print_map(map.clone(), self.nb_col, self.nb_lin);
         for i in 0..10 {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
@@ -504,11 +501,14 @@ impl Arena {
                             } else if i == 2
                                 && is_protein(self.map[y * self.nb_col + x])
                                 && !self.is_ate(x, y)
+                                && guapo.a > 0
+                                && guapo.c > 0
                             {
                                 let (continue_, _nb, new_x, new_y, dir) =
                                     self.come_back(&map, x, y, i);
                                 if continue_ == true {
                                     if dir == 0 {
+                                        eprintln!("je fais une bouche a 2 de distance");
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
@@ -517,6 +517,7 @@ impl Arena {
                                             " N".to_string(),
                                         );
                                     } else if dir == 128 {
+                                        eprintln!("je fais une bouche a 2 de distance");
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
@@ -525,6 +526,7 @@ impl Arena {
                                             " S".to_string(),
                                         );
                                     } else if dir == 256 {
+                                        eprintln!("je fais une bouche a 2 de distance");
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
@@ -533,6 +535,7 @@ impl Arena {
                                             " W".to_string(),
                                         );
                                     } else {
+                                        eprintln!("je fais une bouche a 2 de distance");
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
@@ -543,49 +546,51 @@ impl Arena {
                                     }
                                 }
                             } else if !self.is_ate(x, y) {
-                                eprintln!("j'ai trouve une prot a rush");
                                 let (mut continue_, mut nb, mut new_x, mut new_y, mut dir) =
                                     self.come_back(&map, x, y, i);
                                 while continue_ == true && nb > 1 {
                                     (continue_, nb, new_x, new_y, dir) =
                                         self.come_back(&map, x, y, nb);
-                                    eprintln!("je boucle sur x:{}, y:{}, nb:{}", new_x, new_y, nb);
                                 }
-                                // attention aux moves interdits
-                                // axe d'amelioration -> je construit que des basics
-                                // si la dist est 2 faire un bouche
-                                // si je peux pas faire de bouche j'ecrase les prot que je mange pas
                                 if nb == 1 && continue_ == true {
                                     if dir == 0 {
+                                        eprintln!("j'ai trouve une prot a rush");
+                                        let (order, _dir) = guapo.find_right_cel();
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
                                             new_y,
-                                            " BASIC".to_string(),
+                                            order,
                                             " N".to_string(),
                                         );
                                     } else if dir == 128 {
+                                        eprintln!("j'ai trouve une prot a rush");
+                                        let (order, _dir) = guapo.find_right_cel();
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
                                             new_y,
-                                            " BASIC".to_string(),
+                                            order,
                                             " S".to_string(),
                                         );
                                     } else if dir == 256 {
+                                        eprintln!("j'ai trouve une prot a rush");
+                                        let (order, _dir) = guapo.find_right_cel();
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
                                             new_y,
-                                            " BASIC".to_string(),
+                                            order,
                                             " W".to_string(),
                                         );
                                     } else {
+                                        eprintln!("j'ai trouve une prot a rush");
+                                        let (order, _dir) = guapo.find_right_cel();
                                         return (
                                             self.find_my_id(new_x, new_y, id),
                                             new_x,
                                             new_y,
-                                            " BASIC".to_string(),
+                                            order,
                                             " E".to_string(),
                                         );
                                     }
@@ -596,7 +601,6 @@ impl Arena {
                 }
             }
         }
-        eprintln!("pas de boucle infinie");
         return self.find_stupid_move(id, guapo);
     }
 
@@ -810,6 +814,7 @@ pub fn print_map(map: Vec<u32>, slice: usize, nb_slice: usize) {
         eprintln!("{:?}\n", &map[(i * slice)..(slice * (1 + i))]);
     }
 }
+
 pub fn print_enemies(mut map: Vec<u32>, slice: usize, nb_slice: usize) {
     eprintln!("print enemies\n");
     for j in 0..(slice * nb_slice) {

@@ -21,4 +21,17 @@ impl Player {
         self.c = c;
         self.d = d;
     }
+
+    pub fn find_right_cel(&self) -> (String, String) {
+        if self.a > 0 {
+            return (" BASIC".to_string(), "".to_string());
+        } else if self.b > 0 && self.c > 0 {
+            return (" TENTACLE".to_string(), " W".to_string());
+        } else if self.b > 0 && self.d > 0 {
+            return (" SPORER".to_string(), " E".to_string());
+        } else if self.c > 0 && self.d > 0 {
+            return (" HARVESTER".to_string(), " E".to_string());
+        }
+        (" WAIT".to_string(), "".to_string())
+    }
 }

@@ -305,6 +305,7 @@ pub mod arena {
             guapo: &Player,
         ) -> (u32, usize, usize, String, String) {
             let mut map = vec![4; self.nb_col * self.nb_lin];
+            eprintln!("je fais un stupid move");
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if is_wall(self.map[y * self.nb_col + x]) {
@@ -343,30 +344,16 @@ pub mod arena {
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 1 {
-                        if guapo.a > 0 {
-                            return (id, x, y, " BASIC".to_string(), "".to_string());
-                        } else if guapo.b > 0 && guapo.c > 0 {
-                            return (id, x, y, " TENTACLE".to_string(), " W".to_string());
-                        } else if guapo.b > 0 && guapo.d > 0 {
-                            return (id, x, y, " SPORER".to_string(), " E".to_string());
-                        } else if guapo.c > 0 && guapo.d > 0 {
-                            return (id, x, y, " HARVESTER".to_string(), " E".to_string());
-                        }
+                        let (order, dir) = guapo.find_right_cel();
+                        return (id, x, y, order, dir);
                     }
                 }
             }
             for y in 0..self.nb_lin {
                 for x in 0..self.nb_col {
                     if map[y * self.nb_col + x] == 2 {
-                        if guapo.a > 0 {
-                            return (id, x, y, " BASIC".to_string(), "".to_string());
-                        } else if guapo.b > 0 && guapo.c > 0 {
-                            return (id, x, y, " TENTACLE".to_string(), " W".to_string());
-                        } else if guapo.b > 0 && guapo.d > 0 {
-                            return (id, x, y, " SPORER".to_string(), " E".to_string());
-                        } else if guapo.c > 0 && guapo.d > 0 {
-                            return (id, x, y, " HARVESTER".to_string(), " E".to_string());
-                        }
+                        let (order, dir) = guapo.find_right_cel();
+                        return (id, x, y, order, dir);
                     }
                 }
             }
@@ -381,22 +368,26 @@ pub mod arena {
         ) -> (bool, u32, usize, usize, u32) {
             if nb > 1 {
                 if x + 1 < self.nb_col && map[y * self.nb_col + x + 1] == nb - 1 &&
-                    !is_protein(self.map[y * self.nb_col + x + 1])
+                    !is_protein(self.map[y * self.nb_col + x + 1]) &&
+                    !self.is_forbidden_move(x + 1, y)
                 {
                     return (true, nb - 1, x + 1, y, 256);
                 }
                 if x > 0 && map[y * self.nb_col + x - 1] == nb - 1 &&
-                    !is_protein(self.map[y * self.nb_col + x - 1])
+                    !is_protein(self.map[y * self.nb_col + x - 1]) &&
+                    !self.is_forbidden_move(x - 1, y)
                 {
                     return (true, nb - 1, x - 1, y, 256 + 128);
                 }
                 if y + 1 < self.nb_lin && map[(y + 1) * self.nb_col + x] == nb - 1 &&
-                    !is_protein(self.map[(y + 1) * self.nb_col + x])
+                    !is_protein(self.map[(y + 1) * self.nb_col + x]) &&
+                    !self.is_forbidden_move(x, y + 1)
                 {
                     return (true, nb - 1, x, y + 1, 0);
                 }
                 if y > 0 && map[(y - 1) * self.nb_col + x] == nb - 1 &&
-                    !is_protein(self.map[(y - 1) * self.nb_col + x])
+                    !is_protein(self.map[(y - 1) * self.nb_col + x]) &&
+                    !self.is_forbidden_move(x, y - 1)
                 {
                     return (true, nb - 1, x, y - 1, 128);
                 }
@@ -454,6 +445,7 @@ pub mod arena {
                     }
                 }
             }
+            print_map(map.clone(), self.nb_col, self.nb_lin);
             for i in 0..10 {
                 for y in 0..self.nb_lin {
                     for x in 0..self.nb_col {
@@ -466,12 +458,15 @@ pub mod arena {
                                         map[y * self.nb_col + x] = 2;
                                     }
                                 } else if i == 2 && is_protein(self.map[y * self.nb_col + x]) &&
-                                           !self.is_ate(x, y)
+                                           !self.is_ate(x, y) &&
+                                           guapo.a > 0 &&
+                                           guapo.c > 0
                                 {
                                     let (continue_, _nb, new_x, new_y, dir) =
                                         self.come_back(&map, x, y, i);
                                     if continue_ == true {
                                         if dir == 0 {
+                                            eprintln!("je fais une bouche a 2 de distance");
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
@@ -480,6 +475,7 @@ pub mod arena {
                                                 " N".to_string(),
                                             );
                                         } else if dir == 128 {
+                                            eprintln!("je fais une bouche a 2 de distance");
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
@@ -488,6 +484,7 @@ pub mod arena {
                                                 " S".to_string(),
                                             );
                                         } else if dir == 256 {
+                                            eprintln!("je fais une bouche a 2 de distance");
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
@@ -496,6 +493,7 @@ pub mod arena {
                                                 " W".to_string(),
                                             );
                                         } else {
+                                            eprintln!("je fais une bouche a 2 de distance");
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
@@ -506,50 +504,51 @@ pub mod arena {
                                         }
                                     }
                                 } else if !self.is_ate(x, y) {
-                                    eprintln!("j'ai trouve une prot a rush");
                                     let (mut continue_, mut nb, mut new_x, mut new_y, mut dir) =
                                         self.come_back(&map, x, y, i);
                                     while continue_ == true && nb > 1 {
                                         (continue_, nb, new_x, new_y, dir) =
                                             self.come_back(&map, x, y, nb);
-                                        eprintln!(
-                                            "je boucle sur x:{}, y:{}, nb:{}",
-                                            new_x,
-                                            new_y,
-                                            nb
-                                        );
                                     }
                                     if nb == 1 && continue_ == true {
                                         if dir == 0 {
+                                            eprintln!("j'ai trouve une prot a rush");
+                                            let (order, _dir) = guapo.find_right_cel();
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
                                                 new_y,
-                                                " BASIC".to_string(),
+                                                order,
                                                 " N".to_string(),
                                             );
                                         } else if dir == 128 {
+                                            eprintln!("j'ai trouve une prot a rush");
+                                            let (order, _dir) = guapo.find_right_cel();
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
                                                 new_y,
-                                                " BASIC".to_string(),
+                                                order,
                                                 " S".to_string(),
                                             );
                                         } else if dir == 256 {
+                                            eprintln!("j'ai trouve une prot a rush");
+                                            let (order, _dir) = guapo.find_right_cel();
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
                                                 new_y,
-                                                " BASIC".to_string(),
+                                                order,
                                                 " W".to_string(),
                                             );
                                         } else {
+                                            eprintln!("j'ai trouve une prot a rush");
+                                            let (order, _dir) = guapo.find_right_cel();
                                             return (
                                                 self.find_my_id(new_x, new_y, id),
                                                 new_x,
                                                 new_y,
-                                                " BASIC".to_string(),
+                                                order,
                                                 " E".to_string(),
                                             );
                                         }
@@ -560,7 +559,6 @@ pub mod arena {
                     }
                 }
             }
-            eprintln!("pas de boucle infinie");
             return self.find_stupid_move(id, guapo);
         }
         pub fn is_enemy_next_to(&self, x: usize, y: usize) -> bool {
@@ -1042,6 +1040,18 @@ pub mod player {
             self.c = c;
             self.d = d;
         }
+        pub fn find_right_cel(&self) -> (String, String) {
+            if self.a > 0 {
+                return (" BASIC".to_string(), "".to_string());
+            } else if self.b > 0 && self.c > 0 {
+                return (" TENTACLE".to_string(), " W".to_string());
+            } else if self.b > 0 && self.d > 0 {
+                return (" SPORER".to_string(), " E".to_string());
+            } else if self.c > 0 && self.d > 0 {
+                return (" HARVESTER".to_string(), " E".to_string());
+            }
+            (" WAIT".to_string(), "".to_string())
+        }
     }
 }
 use arena::Arena;
@@ -1188,7 +1198,9 @@ fn main() {
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
                 output.push_str(&order);
-                output.push_str(&direction);
+                if order == " HARVESTER" || order == " TENTACLE" || order == " SPORER" {
+                    output.push_str(&direction);
+                }
             }
             if order == "WAIT" {
                 println!("WAIT");

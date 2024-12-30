@@ -177,7 +177,9 @@ fn main() {
                 output.push_str(" ");
                 output.push_str(&y_new.to_string());
                 output.push_str(&order);
-                output.push_str(&direction);
+                if order == " HARVESTER" || order == " TENTACLE" || order == " SPORER" {
+                    output.push_str(&direction);
+                }
             }
             if order == "WAIT" {
                 println!("WAIT");
