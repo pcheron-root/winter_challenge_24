@@ -493,7 +493,6 @@ pub mod arena {
                                     !self.is_ate(x, y) &&
                                     guapo.a > 0 && guapo.c > 0
                                 {
-                                    eprintln!("appel 1\n");
                                     let (continue_, _nb, new_x, new_y, dir) =
                                         self.come_back(&map, x, y, i);
                                     if continue_ == true {
@@ -536,11 +535,9 @@ pub mod arena {
                                         }
                                     }
                                 } else if !self.is_ate(x, y) {
-                                    eprintln!("appel 2\n");
                                     let (mut continue_, mut nb, mut new_x, mut new_y, mut dir) =
                                         self.come_back(&map, x, y, i);
                                     while continue_ == true && nb > 1 {
-                                        eprintln!("appel 3\n");
                                         (continue_, nb, new_x, new_y, dir) =
                                             self.come_back(&map, new_x, new_y, nb);
                                     }
@@ -1079,14 +1076,21 @@ pub mod player {
             self.d = d;
         }
         pub fn find_right_cel(&self) -> (String, String) {
-            if self.a > 0 {
+            let nb_a = self.a;
+            let nb_harv = std::cmp::min(self.c, self.d);
+            let nb_tentacle = std::cmp::min(self.b, self.c);
+            let nb_sporer = std::cmp::min(self.b, self.d);
+            if nb_a >= nb_harv && nb_a >= nb_tentacle && nb_a >= nb_sporer {
                 return (" BASIC".to_string(), "".to_string());
-            } else if self.b > 0 && self.c > 0 {
-                return (" TENTACLE".to_string(), " W".to_string());
-            } else if self.b > 0 && self.d > 0 {
+            }
+            if nb_sporer >= nb_tentacle && nb_sporer >= nb_harv {
                 return (" SPORER".to_string(), " E".to_string());
-            } else if self.c > 0 && self.d > 0 {
+            }
+            if nb_harv >= nb_tentacle {
                 return (" HARVESTER".to_string(), " E".to_string());
+            }
+            if self.b > 0 && self.c > 0 {
+                return (" TENTACLE".to_string(), " W".to_string());
             }
             ("WAIT".to_string(), "".to_string())
         }

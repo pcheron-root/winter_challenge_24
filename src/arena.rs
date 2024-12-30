@@ -1,5 +1,3 @@
-// ! repasser dans les 1 apres avoir transformer les prots en 3
-
 ////////////////////////////////////////////////////////////////////////////
 
 // ! parfois je rush pas les prot a 9 de distance
@@ -8,9 +6,6 @@
 
 // ! quand je fais un stupid move en ecrasant une prot,
 //   dans certains cas je pourrais mettre une bouche pour grail une prot
-
-// ! quand je fais un stupid move, des fois j'utilise les ressources
-//   qui sont les moins abondantes
 
 // ! faire les sporer
 //   il faut detechter les endroits loins et proches de 2 des proteines
